@@ -3,10 +3,10 @@ import socket
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .types import HTTPParseError
+from ..core.types import HTTPParseError
 
 if TYPE_CHECKING:
-    from .server import SocketReader
+    from .socket import SocketReader
 
 STATUS_PHRASES = {
     200: "OK",

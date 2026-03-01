@@ -6,11 +6,12 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 from typing import Callable
 
+from ..core.types import HTTPParseError
+from ..core.types import Request
+from ..core.types import Response
 from .http import HTTPParser
 from .http import write_response
-from .types import HTTPParseError
-from .types import Request
-from .types import Response
+from .socket import SocketReader
 
 KEEP_ALIVE_TIMEOUT = 30.0
 MAX_REQUESTS_PER_CONN = 1000
@@ -30,34 +31,6 @@ class ThreadPool:
     def shutdown(self) -> None:
         if self.executor:
             self.executor.shutdown(wait=True, cancel_futures=False)
-
-
-class SocketReader:
-    def __init__(self, sock: socket.socket):
-        self.sock = sock
-        self.buffer = bytearray()
-
-    def readline(self) -> str:
-        while True:
-            idx = self.buffer.find(b"\r\n")
-            if idx != -1:
-                line = self.buffer[:idx].decode("latin-1")
-                del self.buffer[:idx + 2]
-                return line
-            chunk = self.sock.recv(4096)
-            if not chunk:
-                raise ConnectionError("Disconnected")
-            self.buffer.extend(chunk)
-
-    def read(self, n: int) -> bytes:
-        while len(self.buffer) < n:
-            chunk = self.sock.recv(4096)
-            if not chunk:
-                raise ConnectionError("Disconnected")
-            self.buffer.extend(chunk)
-        data = bytes(self.buffer[:n])
-        del self.buffer[:n]
-        return data
 
 
 class Server:
