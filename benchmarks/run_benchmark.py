@@ -1,3 +1,4 @@
+import argparse
 import statistics
 import subprocess
 import sys
@@ -53,15 +54,18 @@ def bench(name: str, url: str, n: int = 1000, workers: int = 10) -> Result:
         except Exception:
             return None
 
-    t0 = time.perf_counter()
     with ThreadPoolExecutor(max_workers=workers) as pool:
+        # warmup
+        for result in pool.map(request, range(100)):
+            pass
+        t0 = time.perf_counter()
         for result in pool.map(request, range(n)):
             if result is not None:
                 latencies.append(result)
                 success += 1
             else:
                 failed += 1
-    total_time = time.perf_counter() - t0
+        total_time = time.perf_counter() - t0
 
     return Result(name, n, success, failed, total_time, latencies)
 
@@ -84,14 +88,26 @@ def wait_server(url: str, timeout: int = 5) -> bool:
 
 
 def main() -> None:
-    n = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
-    workers = int(sys.argv[2]) if len(sys.argv) > 2 else 10
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--n", type=int, default=1000, help="number of requests")
+    parser.add_argument("--workers", type=int, default=10, help="number of client threads")
+    parser.add_argument(
+        "--barq-workers",
+        type=int,
+        default=4,
+        help="number of barq server workers",
+    )
+    args = parser.parse_args()
+
+    n = args.n
+    workers = args.workers
+    barq_workers = args.barq_workers
 
     print(f"\n{'=' * 60}")
     print(f"  BARQ vs FASTAPI (optimal configs)")
     print(f"  {n} requests, {workers} concurrent clients")
     print(f"{'=' * 60}")
-    print(f"  Barq: 4 threads, blocking I/O")
+    print(f"  Barq: {barq_workers} threads, blocking I/O")
     print(f"  FastAPI: async + aiosqlite")
     print(f"{'=' * 60}\n")
 
@@ -100,7 +116,12 @@ def main() -> None:
         print("Starting servers...")
         procs.append(
             subprocess.Popen(
-                [sys.executable, "benchmarks/barq_app.py"],
+                [
+                    sys.executable,
+                    "benchmarks/barq_app.py",
+                    "--workers",
+                    str(barq_workers),
+                ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
@@ -140,7 +161,12 @@ def main() -> None:
 
         for label, path in tests:
             print(f"─── {label} ───")
-            barq = bench("Barq (4 threads)", f"http://127.0.0.1:8001{path}", n, workers)
+            barq = bench(
+                f"Barq ({barq_workers} threads)",
+                f"http://127.0.0.1:8001{path}",
+                n,
+                workers,
+            )
             fapi = bench("FastAPI (async)", f"http://127.0.0.1:8002{path}", n, workers)
             print_result(barq)
             print_result(fapi)

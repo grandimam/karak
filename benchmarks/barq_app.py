@@ -1,3 +1,4 @@
+import argparse
 import sqlite3
 from threading import local
 from typing import Annotated
@@ -89,4 +90,9 @@ def startup() -> None:
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8001, workers=4)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8001)
+    parser.add_argument("--workers", type=int, default=4)
+    args = parser.parse_args()
+    app.run(host=args.host, port=args.port, workers=args.workers)
