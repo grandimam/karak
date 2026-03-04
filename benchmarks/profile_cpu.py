@@ -1,13 +1,14 @@
-import time
-import hashlib
 import cProfile
+import hashlib
 import pstats
+import time
 from io import StringIO
 
-from pydantic import BaseModel
-from barq import Barq, Response
 from barq.request import Request
 from barq.routing import Router
+from pydantic import BaseModel
+
+from barq import Barq, Response
 
 
 class CpuResponse(BaseModel):
@@ -44,7 +45,11 @@ def main():
 
     # 1. Pure CPU work (SHA256)
     print("1. Pure CPU Work (SHA256 x 5000)")
-    measure("   SHA256 hashing", lambda: hashlib.sha256(b"x" * 1000).digest() and [hashlib.sha256(b"test").digest() for _ in range(5000)])
+    measure(
+        "   SHA256 hashing",
+        lambda: hashlib.sha256(b"x" * 1000).digest()
+        and [hashlib.sha256(b"test").digest() for _ in range(5000)],
+    )
     print()
 
     # 2. Pydantic model creation
@@ -65,13 +70,16 @@ def main():
 
     # 5. Request object creation
     print("5. Request Object Creation")
-    measure("   Request(...)", lambda: Request(
-        method="GET",
-        path="/cpu",
-        headers={"content-type": "application/json"},
-        query_string="",
-        body=b"",
-    ))
+    measure(
+        "   Request(...)",
+        lambda: Request(
+            method="GET",
+            path="/cpu",
+            headers={"content-type": "application/json"},
+            query_string="",
+            body=b"",
+        ),
+    )
     print()
 
     # 6. Router matching
@@ -118,7 +126,7 @@ def main():
     pr.disable()
 
     s = StringIO()
-    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
+    ps = pstats.Stats(pr, stream=s).sort_stats("cumulative")
     ps.print_stats(20)
     print(s.getvalue())
 

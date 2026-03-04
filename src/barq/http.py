@@ -1,5 +1,4 @@
 import socket
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -64,7 +63,7 @@ class HTTPParser:
             idx = line.find(":")
             if idx == -1:
                 raise HTTPParseError(f"Bad header: {line}")
-            headers[line[:idx].lower()] = line[idx + 1:].strip()
+            headers[line[:idx].lower()] = line[idx + 1 :].strip()
         return headers
 
     def _read_body(self, headers: dict[str, str]) -> bytes:

@@ -63,7 +63,9 @@ async def db_endpoint() -> list[UserResponse]:
         db.row_factory = aiosqlite.Row
         async with db.execute("SELECT id, name, email FROM users LIMIT 10") as cursor:
             rows = await cursor.fetchall()
-            return [UserResponse(id=row["id"], name=row["name"], email=row["email"]) for row in rows]
+            return [
+                UserResponse(id=row["id"], name=row["name"], email=row["email"]) for row in rows
+            ]
 
 
 @app.get("/cpu")
@@ -82,4 +84,5 @@ def startup() -> None:
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8002)

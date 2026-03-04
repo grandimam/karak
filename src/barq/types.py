@@ -1,7 +1,5 @@
 import json
-
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from typing import Any
 from urllib.parse import parse_qs
 
@@ -9,6 +7,7 @@ from pydantic import BaseModel
 
 try:
     import orjson
+
     HAS_ORJSON = True
 except ImportError:
     HAS_ORJSON = False

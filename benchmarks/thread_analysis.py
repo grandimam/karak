@@ -1,8 +1,8 @@
-import time
-import threading
 import hashlib
-from concurrent.futures import ThreadPoolExecutor
+import threading
+import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 
 def test_thread_parallelism():
@@ -60,6 +60,7 @@ def test_server_concurrency():
     time.sleep(2)
 
     try:
+
         def make_request(_):
             start = time.perf_counter()
             with urllib.request.urlopen("http://127.0.0.1:8001/cpu", timeout=10) as r:
@@ -97,7 +98,7 @@ def test_server_concurrency():
             times = list(pool.map(make_request, range(10)))
         total = time.perf_counter() - t0
         print(f"   Total time: {total:.3f}s")
-        print(f"   Expected if parallel (10/4 * ~2ms): ~{10/4 * 0.002:.3f}s")
+        print(f"   Expected if parallel (10/4 * ~2ms): ~{10 / 4 * 0.002:.3f}s")
         print(f"   Throughput: {10 / total:.1f} req/s")
 
     finally:
@@ -111,8 +112,9 @@ def test_our_pool():
     print("OUR THREAD POOL TEST")
     print("=" * 60)
 
-    from barq.pool import ThreadPool
     import queue
+
+    from barq.pool import ThreadPool
 
     results = queue.Queue()
 
@@ -138,7 +140,8 @@ def test_our_pool():
     while len(collected) < 4:
         try:
             collected.append(results.get(timeout=5))
-        except:
+        except Exception as exc:
+            print(f"Exception while collecting results: {exc}")
             break
 
     total = time.perf_counter() - t0

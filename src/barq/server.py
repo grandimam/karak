@@ -1,16 +1,11 @@
 import os
 import selectors
 import socket
-
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
-from typing import Callable
+from typing import Any, Callable
 
-from .http import HTTPParser
-from .http import write_response
-from .types import HTTPParseError
-from .types import Request
-from .types import Response
+from .http import HTTPParser, write_response
+from .types import HTTPParseError, Request, Response
 
 KEEP_ALIVE_TIMEOUT = 30.0
 MAX_REQUESTS_PER_CONN = 1000
@@ -42,7 +37,7 @@ class SocketReader:
             idx = self.buffer.find(b"\r\n")
             if idx != -1:
                 line = self.buffer[:idx].decode("latin-1")
-                del self.buffer[:idx + 2]
+                del self.buffer[: idx + 2]
                 return line
             chunk = self.sock.recv(4096)
             if not chunk:

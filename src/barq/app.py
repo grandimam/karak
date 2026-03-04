@@ -1,21 +1,12 @@
 import inspect
-
 from dataclasses import dataclass
-from typing import Any
-from typing import Callable
-from typing import get_args
-from typing import get_origin
-from typing import get_type_hints
+from typing import Any, Callable, get_args, get_origin, get_type_hints
 
-from pydantic import BaseModel
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .router import RadixRouter
-from .router import RouteData
 from .server import Server
-from .types import HTTPException
-from .types import Request
-from .types import Response
+from .types import HTTPException, Request, Response
 
 
 class Depends:
@@ -53,6 +44,7 @@ class Barq:
             meta = self._build_meta(fn)
             self.router.add(path, method, fn, meta)
             return fn
+
         return decorator
 
     def on_startup(self, fn: Callable[[], None]) -> Callable[[], None]:

@@ -1,12 +1,10 @@
 import sqlite3
-
 from threading import local
 from typing import Annotated
 
 from pydantic import BaseModel
 
-from barq import Barq
-from barq import Depends
+from barq import Barq, Depends
 
 app = Barq()
 

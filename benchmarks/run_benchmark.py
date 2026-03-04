@@ -3,7 +3,6 @@ import subprocess
 import sys
 import time
 import urllib.request
-
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
@@ -88,28 +87,40 @@ def main() -> None:
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
     workers = int(sys.argv[2]) if len(sys.argv) > 2 else 10
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  BARQ vs FASTAPI (optimal configs)")
     print(f"  {n} requests, {workers} concurrent clients")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"  Barq: 4 threads, blocking I/O")
     print(f"  FastAPI: async + aiosqlite")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     procs: list[subprocess.Popen] = []
     try:
         print("Starting servers...")
-        procs.append(subprocess.Popen(
-            [sys.executable, "benchmarks/barq_app.py"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ))
-        procs.append(subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "benchmarks.fastapi_app:app",
-             "--host", "127.0.0.1", "--port", "8002"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ))
+        procs.append(
+            subprocess.Popen(
+                [sys.executable, "benchmarks/barq_app.py"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        )
+        procs.append(
+            subprocess.Popen(
+                [
+                    sys.executable,
+                    "-m",
+                    "uvicorn",
+                    "benchmarks.fastapi_app:app",
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    "8002",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        )
 
         if not wait_server("http://127.0.0.1:8001/json"):
             print("Barq failed to start")

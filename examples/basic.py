@@ -2,10 +2,7 @@ from typing import Annotated
 
 from pydantic import BaseModel
 
-from barq import Barq
-from barq import Depends
-from barq import HTTPException
-from barq import Response
+from barq import Barq, Depends, HTTPException, Response
 
 app = Barq()
 
@@ -38,10 +35,7 @@ def index() -> dict[str, str]:
 
 @app.get("/items")
 def list_items(db: Annotated[dict[int, Item], Depends(get_db)]) -> list[ItemResponse]:
-    return [
-        ItemResponse(id=item_id, **item.model_dump())
-        for item_id, item in db.items()
-    ]
+    return [ItemResponse(id=item_id, **item.model_dump()) for item_id, item in db.items()]
 
 
 @app.get("/items/{item_id}")
