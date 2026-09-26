@@ -1,7 +1,9 @@
 # Karak documentation website
 
-The documentation site uses Markdown, MkDocs, and a custom theme. Its colors,
-typography, and spacing follow the approved minimal paper-and-ink design.
+The documentation site uses Markdown, MkDocs, and a custom theme. Its visual
+identity follows the layered paper sphere: ivory surfaces, sage navigation,
+mist-blue code panels, sand accents, and dark ink for readable text. The sphere
+appears on the quickstart, in the shared wordmark, and in social link previews.
 GitHub Pages serves the generated HTML; it does not run the Karak framework.
 
 ## Local preview
@@ -33,7 +35,8 @@ source files; GitHub Actions builds and uploads the output.
   design proposals and development notes linked from the site.
 - `mkdocs.yml` defines navigation, metadata, and the canonical site URL.
 - `theme/` contains the shared HTML templates.
-- `content/assets/` contains styles, search behavior, and the favicon.
+- `content/assets/` contains styles, search behavior, the favicon, and the sphere
+  share image. The image generation prompt is recorded in `share-card-prompt.md`.
 
 The documentation works without JavaScript. JavaScript adds search, subtle
 syntax coloring, and a collapsible mobile navigation. Search uses the index

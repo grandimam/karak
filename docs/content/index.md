@@ -3,11 +3,14 @@ title: Quickstart
 description: Install Karak, create an endpoint, and see your first response in a browser.
 ---
 
-# Start with a little Python.
-
-<p class="lead">Create an endpoint and see it respond in your browser.</p>
-
-<p class="page-status">Experimental · Python 3.13+</p>
+<header class="docs-opening">
+  <div class="opening-copy">
+    <h1 id="start-with-a-little-python">Start with a little Python.</h1>
+    <p class="lead">Create an endpoint and see it respond in your browser.</p>
+    <p class="page-status">Experimental · Python 3.13+</p>
+  </div>
+  <img class="opening-sphere" src="assets/share-card-sphere.png" width="1734" height="907" alt="" fetchpriority="high">
+</header>
 
 ## Install
 
