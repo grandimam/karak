@@ -5,9 +5,10 @@ import pstats
 from io import StringIO
 
 from pydantic import BaseModel
-from karak import Karak, Response
-from karak.request import Request
-from karak.routing import Router
+from experiments.free_threaded import Karak
+from experiments.free_threaded import Response
+from experiments.free_threaded.types import Request
+from experiments.free_threaded.router import RadixRouter
 
 
 class CpuResponse(BaseModel):
@@ -76,10 +77,10 @@ def main():
 
     # 6. Router matching
     print("6. Router Matching")
-    router = Router()
-    router.add("/cpu", "GET", lambda r, p: None)
-    router.add("/json", "GET", lambda r, p: None)
-    router.add("/items/{id}", "GET", lambda r, p: None)
+    router = RadixRouter()
+    router.add("/cpu", "GET", lambda r, p: None, meta=None)
+    router.add("/json", "GET", lambda r, p: None, meta=None)
+    router.add("/items/{id}", "GET", lambda r, p: None, meta=None)
     measure("   router.match('/cpu', 'GET')", lambda: router.match("/cpu", "GET"))
     print()
 

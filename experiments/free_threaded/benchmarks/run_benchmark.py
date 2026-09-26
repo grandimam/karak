@@ -100,12 +100,12 @@ def main() -> None:
     try:
         print("Starting servers...")
         procs.append(subprocess.Popen(
-            [sys.executable, "benchmarks/karak_app.py"],
+            [sys.executable, "-m", "experiments.free_threaded.benchmarks.karak_app"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         ))
         procs.append(subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "benchmarks.fastapi_app:app",
+            [sys.executable, "-m", "uvicorn", "experiments.free_threaded.benchmarks.fastapi_app:app",
              "--host", "127.0.0.1", "--port", "8002"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,

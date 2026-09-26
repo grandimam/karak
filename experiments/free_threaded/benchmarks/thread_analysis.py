@@ -53,7 +53,7 @@ def test_server_concurrency():
 
     # Start server
     proc = subprocess.Popen(
-        [sys.executable, "benchmarks/karak_app.py"],
+        [sys.executable, "-m", "experiments.free_threaded.benchmarks.karak_app"],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
@@ -111,7 +111,7 @@ def test_our_pool():
     print("OUR THREAD POOL TEST")
     print("=" * 60)
 
-    from karak.pool import ThreadPool
+    from experiments.free_threaded.server import ThreadPool
     import queue
 
     results = queue.Queue()

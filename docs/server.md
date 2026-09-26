@@ -1,0 +1,73 @@
+# ASGI request handling
+
+The main application is `Karak`, exported by `karak` and implemented in
+[`src/karak/server.py`](../src/karak/server.py). An ASGI server such as Uvicorn
+owns the network connections and calls the application with `scope`, `receive`,
+and `send`.
+
+`KarakApp` in `karak.types` is a callable type alias used by the middleware.
+It is not the application class.
+
+## Request flow
+
+```text
+ASGI server
+    → Karak.__call__
+    → ExceptionHandler
+    → Router
+    → Route: parameter conversion and validation
+    → async handler
+    → Response
+    → ASGI send
+```
+
+During registration, `Inspector` reads the handler signature and annotations,
+checks path placeholders, and selects converters. During a request, `Router`
+checks the registered routes in order. The matching `Route` builds the handler
+arguments from path and query values, awaits the handler, and sends its result
+through a `Response`.
+
+See the [ASGI guide](asgi.md) for runnable examples and routing limitations.
+
+## Request object
+
+`Request` is a low-level wrapper around the ASGI scope and receive callable.
+It is used internally by `Route` and is exported for code that works directly
+with ASGI:
+
+```python
+from karak import Request
+
+
+async def inspect_request(scope, receive):
+    request = Request(scope, receive)
+    return request.path, request.method, request.params, await request.body()
+```
+
+`params` maps query keys to lists of strings and preserves blank values.
+`body()` consumes request messages and joins their body chunks into bytes; it
+raises `RuntimeError` if the client disconnects while the body is being read.
+The body is not cached, so read it once and retain the result if needed.
+
+There is no `Request.json()` method or automatic `Request` injection into route
+handlers in the current ASGI implementation.
+
+## Response and lifecycle
+
+`Response` sends `http.response.start` with the status code, followed by
+`http.response.body`. Ordinary text results are encoded as UTF-8; bytes can be
+returned directly. The default status is 200.
+
+For lifespan scopes, the application acknowledges `lifespan.startup` and
+`lifespan.shutdown`. User-defined startup and shutdown callbacks remain future
+work for the ASGI implementation.
+
+## Free-threaded server
+
+The [free-threaded experiment](../experiments/free_threaded/README.md) owns its
+socket server, HTTP parser, and thread pool. It executes synchronous handlers
+and is started with `app.run(...)`. That server is preserved under
+`experiments/free_threaded/` and does not serve the main ASGI application.
+
+The [original server notes](../notes/server.md) preserve the earlier design
+exploration, including proposed APIs.

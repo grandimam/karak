@@ -5,8 +5,8 @@ from typing import Annotated
 
 from pydantic import BaseModel
 
-from karak import Karak
-from karak import Depends
+from experiments.free_threaded import Karak
+from experiments.free_threaded import Depends
 
 app = Karak()
 

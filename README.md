@@ -1,189 +1,190 @@
+<div align="center">
+
 # Karak
 
-> **⚠️ Experimental**: This project is a proof-of-concept exploring free-threaded Python (PEP 703) for HTTP frameworks. Not production-ready.
+**A simpler path from Python to production.**
 
-A pure-Python HTTP framework built for free-threaded Python 3.13+. No async/await — just threads with true parallelism.
+Karak aims to make APIs, background jobs, workers, and scheduled tasks easier to build, run, and operate together in Python.
 
-**2-5x faster than FastAPI** on real workloads.
+**A free-threaded version is also available** as a [separate experiment](experiments/free_threaded/README.md), with a synchronous API, its own HTTP server, and benchmarks.
 
-Website: [karak.dev](https://karak.dev)
+![Status: Experimental](https://img.shields.io/badge/status-experimental-orange)
+![Python: 3.13+](https://img.shields.io/badge/python-3.13%2B-3776AB?logo=python&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-## Requirements
+[Quick start](#quick-start) · [Free-threaded version](#free-threaded-version) · [Documentation](docs/README.md) · [Development](#development)
 
-- Python 3.13+ with free-threading enabled (`python3.13t`)
-- [uv](https://github.com/astral-sh/uv) package manager
+</div>
 
-## Installation
+> [!WARNING]
+> **Experimental — under active development.**
+> Karak is an early prototype. APIs and behavior can change without notice, and it is not ready for production use. The synchronous execution model is a design goal; the current implementation uses async route handlers.
 
-```bash
-uv add karak
+## The idea
 
-uv add karak[fast]
-```
+A Python application needs more than request handlers. It needs to run work in
+the background, manage resources, recover from failures, shut down cleanly, and
+make its behavior visible in production.
 
-## Development Setup
+Karak’s goal is to bring that work into one application model: APIs, background
+jobs, workers, and scheduled tasks, with a consistent approach to configuration,
+dependencies, lifecycle, and observability. Write ordinary Python and let the
+framework handle more of the machinery around running it reliably.
+
+The current implementation starts with the HTTP foundation: an ASGI application,
+typed routing, validation, and error handling. Durable jobs, scheduling, worker
+management, and production tooling are goals for future development. A separate
+[free-threaded experiment](experiments/free_threaded/README.md) explores
+synchronous handlers and parallel execution.
+
+Read the [design document](docs/design.md) for the broader vision and planned
+capabilities.
+
+## Quick start
+
+Requires **Python 3.13+** and [uv](https://docs.astral.sh/uv/). The main ASGI implementation runs on standard Python; a free-threaded build is not required. The framework itself has no runtime dependencies; the development setup includes Uvicorn.
 
 ```bash
 git clone https://github.com/grandimam/karak.git
 cd karak
-
-# Install
 uv sync
-
-# Run
-uv run python examples/basic.py
-
-# Test
-curl http://localhost:8000/
-curl http://localhost:8000/items/1
-curl -X POST http://localhost:8000/items -H "Content-Type: application/json" -d '{"name":"Widget","price":9.99}'
 ```
 
-## Running Benchmarks
-
-```bash
-# Install dev dependencies
-uv sync --dev
-
-# Run benchmark
-uv run python benchmarks/run_benchmark.py 1000 10
-```
-
-## Quick Start
+Create `example.py` in the repository root:
 
 ```python
-from typing import Annotated
-from pydantic import BaseModel
-from karak import Karak, Depends
+from karak import Karak
 
 app = Karak()
 
-class Item(BaseModel):
-    name: str
-    price: float
 
-@app.get("/")
-def index() -> dict:
-    return {"message": "Hello, World!"}
-
-@app.get("/items/{item_id}")
-def get_item(item_id: int) -> dict:
-    return {"id": item_id}
-
-@app.post("/items")
-def create_item(body: Item) -> Item:
-    return body
-
-if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8000, workers=4)
+@app.get(path="/users/{user_id}", methods=["GET"])
+async def get_user(user_id: int, active: bool = True):
+    return f"User {user_id} · active={active}"
 ```
 
-## Features
+Start the server:
 
-- **Pure Python**: No C extensions, no Rust, no Cython
-- **Free-threaded**: True parallelism without the GIL (Python 3.13t)
-- **Type-driven**: Pydantic models auto-parsed from request body
-- **Dependency injection**: `Depends()` with request-scoped caching
-- **HTTP Keep-alive**: Connection reuse for high throughput
-- **Radix tree router**: O(1) route matching
-- **orjson support**: Optional 3-5x faster JSON serialization
-- **Minimal**: ~500 lines of code in 5 files
-
-## Benchmarks
-
-### System
-
-| Component | Value                  |
-| --------- | ---------------------- |
-| CPU       | Apple M2 Pro           |
-| Cores     | 12                     |
-| Python    | 3.13.0 (free-threaded) |
-| Platform  | Darwin arm64           |
-
-### High Concurrency (2000 requests, 100 concurrent clients)
-
-| Scenario      | Free Threaded (16 threads) | FastAPI (async) | Difference           |
-| ------------- | -------------------------- | --------------- | -------------------- |
-| **JSON**      | 8,418 req/s                | 4,509 req/s     | Free Threaded: +87%  |
-| **CPU Bound** | 1,425 req/s                | 266 req/s       | Free Threaded: +435% |
-
-### Standard Load (1000 requests, 20 concurrent clients)
-
-| Scenario      | Free Threaded (4 threads) | FastAPI (async) | Difference           |
-| ------------- | ------------------------- | --------------- | -------------------- |
-| **JSON**      | 9,287 req/s               | 4,377 req/s     | Free Threaded: +112% |
-| **DB Query**  | 8,284 req/s               | 2,302 req/s     | Free Threaded: +260% |
-| **CPU Bound** | 880 req/s                 | 264 req/s       | Free Threaded: +233% |
-
-### Thread Scaling (CPU-bound workload)
-
-| Workers | req/s | Scaling |
-| ------- | ----- | ------- |
-| 4       | 608   | 1.0x    |
-| 8       | 1,172 | 1.9x    |
-| 16      | 1,297 | 2.1x    |
-| 32      | 1,391 | 2.3x    |
-
-### Analysis
-
-- **I/O-bound (JSON, DB)**: 2-3.5x faster due to simpler threading model and shared memory
-- **CPU-bound**: 5x faster — free-threaded Python enables true parallelism while async is single-threaded
-- **Scales with cores**: Adding threads directly improves CPU-bound throughput
-- **Latency**: Karak achieves lower p99 latency under load (no async task scheduling overhead)
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                       Karak App                         │
-│              (app.py: DI, validation, handlers)         │
-├─────────────────────────────────────────────────────────┤
-│                     Radix Router                        │
-│              (router.py: O(1) route matching)           │
-├─────────────────────────────────────────────────────────┤
-│                    Request / Response                   │
-│               (types.py: dataclasses)                   │
-├─────────────────────────────────────────────────────────┤
-│                      HTTP Parser                        │
-│            (http.py: parse/write HTTP/1.1)              │
-├─────────────────────────────────────────────────────────┤
-│                   ThreadPoolExecutor                    │
-│         (server.py: sockets, keep-alive, workers)       │
-└─────────────────────────────────────────────────────────┘
+```bash
+uv run uvicorn example:app --reload
 ```
 
-## Project Structure
+Try your route:
 
-```
-src/karak/
-├── __init__.py   # exports
-├── app.py        # Karak, Depends, DI resolution
-├── router.py     # RadixRouter, O(1) matching
-├── types.py      # Request, Response, HTTPException
-├── server.py     # Server, ThreadPool, keep-alive
-└── http.py       # HTTPParser, write_response
+```bash
+curl 'http://127.0.0.1:8000/users/42?active=true'
 ```
 
-## Why Free-Threaded Python?
+```text
+User 42 · active=True
+```
 
-Traditional Python has the GIL (Global Interpreter Lock), which prevents true parallelism in threads. Web frameworks work around this using:
+## Parameter types
 
-- **Async/await** (FastAPI, Starlette): Cooperative multitasking
-- **Multiprocessing** (Gunicorn, uvicorn): Separate processes with IPC overhead
+Handler annotations drive path and query conversion. Parameters named in the route come from the path; other parameters come from the query string. Python defaults apply when a query parameter is omitted.
 
-Free-threaded Python (PEP 703) removes the GIL, enabling:
+| Type | Example input | Handler receives |
+| --- | --- | --- |
+| `str` | `name=karak` | A string |
+| `int` | `page=2` | An integer |
+| `float` | `ratio=0.5` | A float |
+| `bool` | `active=true` | A boolean; also accepts `1/0`, `yes/no`, and `on/off` |
+| `UUID` | `id=12345678-1234-5678-1234-567812345678` | A UUID object |
+| `date` | `day=2026-09-25` | An ISO date |
+| `datetime` | `at=2026-09-25T12:30:00Z` | An ISO datetime |
+| `Decimal` | `amount=19.99` | An exact decimal value |
+| `Enum` | `status=shipped` | A matching enum member |
+| `Literal["price", "newest"]` | `sort=price` | An allowed value |
+| `list[int]` | `id=1&id=2` | `[1, 2]` — query parameters only |
 
-- **Simple synchronous code** that runs in parallel
-- **Shared memory** between threads (no serialization)
-- **Lower overhead** than multiprocessing
+For example, combine restricted choices with repeated query parameters:
 
-## Limitations
+```python
+from typing import Literal
 
-- Experimental and not battle-tested
-- HTTP/1.1 only (no HTTP/2, no WebSocket)
-- No middleware system (yet)
-- C extensions with internal locks don't parallelize
+
+@app.get(path="/products", methods=["GET"])
+async def products(tag: list[str], sort: Literal["price", "newest"] = "newest"):
+    return f"Tags: {', '.join(tag)} · sort={sort}"
+```
+
+```bash
+curl 'http://127.0.0.1:8000/products?tag=python&tag=backend&sort=price'
+```
+
+Missing required parameters and invalid values produce **HTTP 422** responses. Repeated query keys are accepted for lists and rejected for scalar parameters. Unsupported annotations are rejected when the route is registered.
+
+## Built so far
+
+- **ASGI application** with HTTP handling and startup/shutdown acknowledgements.
+- **Routing** with method matching and named path parameters.
+- **Typed parameters** with conversion, defaults, and validation.
+- **Responses** for text and bytes, with custom status codes through `Response`.
+- **Error handling** for validation failures and unexpected handler exceptions.
+
+The [design document](docs/design.md) describes planned work, including synchronous execution, dependency injection, JSON responses, and a thread-based executor.
+
+## Free-threaded version
+
+Karak also includes a **free-threaded HTTP experiment** in
+[`experiments/free_threaded/`](experiments/free_threaded/README.md). It explores
+synchronous application code and parallel execution within Karak.
+
+| | Main ASGI implementation | Free-threaded experiment |
+| --- | --- | --- |
+| Import | `from karak import Karak` | `from experiments.free_threaded import Karak` |
+| Handlers | `async def` | `def` |
+| Server | An ASGI server, such as Uvicorn | Built-in socket server and thread pool |
+| Example | `examples/basic.py` | `experiments/free_threaded/examples/basic.py` |
+| Distribution | Installed as the `karak` package | Available from this repository |
+
+To run the experiment, use a free-threaded Python build and run these commands
+from the repository root:
+
+```bash
+uv sync --group experiments --python 3.13t
+uv run --group experiments --python 3.13t python -m experiments.free_threaded.examples.basic
+```
+
+The experiment includes dependency injection, Pydantic request bodies, JSON
+responses, and HTTP keep-alive. Those features belong to the experimental
+implementation; they are not yet implemented in the main ASGI framework.
+See its [guide and historical benchmarks](experiments/free_threaded/README.md)
+for details. The historical results measure the threaded implementation only.
+
+## Development
+
+Install dependencies and run the test suite:
+
+```bash
+uv sync
+uv run python -m unittest discover -s tests
+```
+
+| Resource | What you'll find |
+| --- | --- |
+| [Documentation](docs/README.md) | Current guides, experiment, and design proposals |
+| [ASGI guide](docs/asgi.md) | Routes, parameters, responses, and current limitations |
+| [Request handling](docs/server.md) | How the ASGI implementation handles requests |
+| [Design](docs/design.md) | Goals, execution model, and planned architecture |
+| [Routing notes](notes/route.md) | Handler inspection and parameter validation |
+| [Load testing](docs/load-testing.md) | Uvicorn + hey setup and measurement guidance |
+| [Issues](https://github.com/grandimam/karak/issues) | Bug reports and discussions |
+
+## Repository layout
+
+```text
+src/karak/                  # Main ASGI implementation
+examples/basic.py           # Runnable ASGI demo
+examples/exploration.py     # Exploratory demo and development notes
+tests/                     # ASGI routing and validation tests
+docs/                      # Design proposals and load-testing guide
+notes/                     # Development notes
+experiments/free_threaded/  # Threaded HTTP experiment and benchmarks
+```
+
+Run the included demo with `uv run uvicorn examples.basic:app --reload`.
 
 ## License
 
-MIT
+[MIT](LICENSE).
