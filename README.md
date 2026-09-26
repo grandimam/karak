@@ -26,10 +26,15 @@ A Python application needs more than request handlers. It needs to run work in
 the background, manage resources, recover from failures, shut down cleanly, and
 make its behavior visible in production.
 
-Karak’s goal is to bring that work into one application model: APIs, background
-jobs, workers, and scheduled tasks, with a consistent approach to configuration,
-dependencies, lifecycle, and observability. Write ordinary Python and let the
-framework handle more of the machinery around running it reliably.
+Karak’s goal is to let you build an API, hand longer work to a worker, schedule
+recurring jobs, and operate them together. You should be able to see what is
+running, understand failures, retry work, and deploy changes with predictable
+behavior—all within one Python application model.
+
+For example, a report request should be able to become a background job, retry
+after a temporary failure, and run on a weekly schedule using the same
+application services. We want the configuration, resource management, and
+visibility into that work to feel consistent from start to finish.
 
 The current implementation starts with the HTTP foundation: an ASGI application,
 typed routing, validation, and error handling. Durable jobs, scheduling, worker
@@ -37,8 +42,8 @@ management, and production tooling are goals for future development. A separate
 [free-threaded experiment](experiments/free_threaded/README.md) explores
 synchronous handlers and parallel execution.
 
-Read the [design document](docs/design.md) for the broader vision and planned
-capabilities.
+Read [our vision and plans](docs/content/design.md) for the experience we want
+to build and the current status of each area.
 
 ## Quick start
 
@@ -164,6 +169,7 @@ uv run python -m unittest discover -s tests
 | Resource | What you'll find |
 | --- | --- |
 | [Documentation](docs/README.md) | Current guides, experiment, and design proposals |
+| [Documentation website](docs/website.md) | Local preview, editing, and GitHub Pages deployment |
 | [ASGI guide](docs/asgi.md) | Routes, parameters, responses, and current limitations |
 | [Request handling](docs/server.md) | How the ASGI implementation handles requests |
 | [Design](docs/design.md) | Goals, execution model, and planned architecture |

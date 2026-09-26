@@ -1,11 +1,28 @@
 ---
-title: Responses
-description: Return text, bytes, and custom status codes, and understand error responses.
+title: Send responses
+description: Return a message, choose a status code, and understand the errors callers receive.
 ---
 
-# Send something back.
+# Choose what your caller receives.
 
-<p class="lead">Return text, bytes, or an explicit response.</p>
+<p class="lead">Send back a message and a status that describes the result.</p>
+
+## Return a message
+
+Return a string from your endpoint to send a text response with HTTP 200:
+
+```python
+@app.get(path="/", methods=["GET"])
+async def index():
+    return "Hello from Karak"
+```
+
+The caller receives `Hello from Karak`. Text can include Unicode characters.
+
+## Choose a status code
+
+Use `Response` when you want to specify the status yourself. This is a complete
+example you can save as `main.py`:
 
 ```python
 from karak import Karak
@@ -14,35 +31,45 @@ from karak import Response
 app = Karak()
 
 
-@app.get(path="/", methods=["GET"])
-async def index():
-    return "Hello from Karak"
-
-
-@app.get(path="/accepted", methods=["GET"])
-async def accepted():
-    return Response(status_code=202, content="Accepted")
+@app.get(path="/users/{user_id}", methods=["GET"])
+async def user(user_id: int):
+    if user_id != 42:
+        return Response(status_code=404, content="User not found")
+    return "User 42"
 ```
 
-Ordinary text is encoded as UTF-8. The default status is 200. A `Response`
-lets you set another status code explicitly.
+Start it with `uv run uvicorn main:app --reload`, then inspect the status and
+body together:
 
-## Bytes and empty bodies
+```sh
+curl -i http://127.0.0.1:8000/users/7
+```
 
-Bytes can be returned directly. Return `b""` for an empty body. Automatic JSON
-serialization, custom response headers, and streaming responses are not
-implemented in the ASGI framework yet.
+The response has status 404 and the body `User not found`. Request `/users/42`
+instead to receive HTTP 200 with `User 42`.
 
-## Errors
+## Return bytes or an empty body
 
-Invalid or missing input produces HTTP 422 with a text explanation. An
-unexpected handler exception is logged through `karak.errors`; the client
-receives HTTP 500 with the body `Internal Server Error`.
+You can return bytes directly. Return `b""` when you want an empty response
+body, or use `Response(status_code=204, content=b"")` for a response with no
+content and an explicit 204 status.
 
-Routing errors have [prototype limitations](routing.md#prototype-limitations),
-including the current status for unmatched paths.
+## Can I return JSON?
 
-## The other implementation
+Automatic JSON responses, custom headers, and streaming are not available in
+the main framework yet. Use text or bytes for the current examples. JSON
+request and response support is part of [the plan](design.md).
 
-The [free-threaded experiment](free-threaded.md) has its own `Response` type
-with JSON support. It is not interchangeable with `karak.Response`.
+The [free-threaded experiment](free-threaded.md) already has its own JSON
+response support, but it uses a separate application API.
+
+## Understand error responses
+
+| Response | What to do |
+| --- | --- |
+| HTTP 422 | Check the parameter named in the response. A required value may be missing or have the wrong format. |
+| HTTP 500 with `Internal Server Error` | Check the server terminal for the traceback from your endpoint. |
+| HTTP 500 with `Route Not Found` | Check the requested URL. Unknown paths do not return 404 yet. |
+| HTTP 405 | Check the allowed methods and whether you registered the same path more than once. |
+
+For the routing-related cases, see [current limitations](routing.md#prototype-limitations).

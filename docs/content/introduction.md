@@ -1,43 +1,54 @@
 ---
 title: Introduction
-description: Karak’s direction, current capabilities, and free-threaded experiment.
+description: What you can do with Karak today and the Python application experience we are building toward.
 ---
 
-# A simpler path from Python to production.
+# From your first endpoint to a running application.
 
-<p class="lead">One application model for the work around your Python code.</p>
+<p class="lead">Karak is being built to make Python applications easier to take to production.</p>
 
-Karak aims to make APIs, background jobs, workers, and scheduled tasks easier to
-build, run, and operate together. The goal is a consistent approach to
-configuration, dependencies, lifecycle, and observability.
+You start with an API. Then you need to send an email after a request, generate
+a report in the background, run something every night, and find out why a job
+failed. Those are all parts of the same application.
 
-## Where we are today
+We want Karak to give you one way to build and operate that application, from
+handling a request to running the work that follows it.
 
-The main implementation is an experimental ASGI framework. It provides async
-route handlers, typed path and query parameters, validation, text and byte
-responses, and startup and shutdown acknowledgements. It runs on standard
-Python 3.13+ and has no runtime dependencies.
+## What can I use today?
 
-Karak is early-stage software. APIs can change, and it is not ready for
-production use.
+You can try an early API framework: create endpoints, read typed values from a
+URL, reject invalid input, and return text or bytes. The guides walk you through
+those tasks with examples you can run locally.
 
-## Where we want to go
+Karak is experimental and not ready for production use. Background jobs,
+scheduling, and the broader production experience described in the
+[vision](design.md) are still planned.
 
-Durable jobs, scheduling, worker management, and production tooling are future
-goals. Reliable background work needs clear delivery guarantees, persistence,
-retries, and visibility into failures. Those capabilities are not implemented
-in the current framework.
+## Start with a small application
 
-The [design notes](design.md) explore that direction.
+You need Python 3.13+ and uv. Standard Python works; you do not need a
+free-threaded build to get started.
 
-## A free-threaded experiment
+1. [Run your first endpoint](index.md).
+2. [Add URLs to your application](routing.md).
+3. [Accept and validate request values](parameters.md).
+4. [Choose what to send back](responses.md).
 
-The repository also includes a [separate HTTP experiment](free-threaded.md)
-with synchronous handlers, a socket server, and a thread pool. It explores
-parallel execution with free-threaded Python. Its API and capabilities are
-separate from the main ASGI framework.
+If you need help setting up your environment, begin with
+[installation](installation.md).
 
-## Begin here
+## Where is Karak going?
 
-Follow the [quickstart](index.md) to serve your first response, then explore
-[routing](routing.md) and [parameters](parameters.md).
+The goal is to let you build an API, hand work to a worker, schedule recurring
+jobs, and operate them together. You should be able to see what is running,
+understand failures, and deploy changes with predictable behavior.
+
+Read [what we plan to build](design.md) for the intended experience and the
+steps toward it.
+
+## Curious about free-threaded Python?
+
+There is also a [separate experiment](free-threaded.md) for trying synchronous
+handlers and parallel execution. It has a different API and is intended for
+exploration. Start with the main guides if you want to learn Karak’s current
+API.

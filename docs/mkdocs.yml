@@ -24,11 +24,11 @@ nav:
       - Introduction: introduction.md
       - Quickstart: index.md
       - Installation: installation.md
-  - Framework:
-      - Application: application.md
-      - Routing: routing.md
-      - Parameters: parameters.md
-      - Responses: responses.md
-  - Explore:
+  - Using Karak:
+      - Run an application: application.md
+      - Define routes: routing.md
+      - Read request values: parameters.md
+      - Send responses: responses.md
+  - Looking ahead:
+      - Our vision: design.md
       - Free-threaded experiment: free-threaded.md
-      - Design notes: design.md

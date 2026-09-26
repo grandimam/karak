@@ -1,68 +1,75 @@
 ---
-title: Application
-description: Create an ASGI application and understand its request and lifespan handling.
+title: Run an application
+description: Start your Karak application, edit it locally, and understand the current deployment limits.
 ---
 
-# The application.
+# Run your application.
 
-<p class="lead">A small ASGI entry point for your Python handlers.</p>
+<p class="lead">Start a server, make changes, and try your endpoints.</p>
+
+A Karak application collects the endpoints you want to make available. Create
+one in `main.py` and add your first endpoint:
 
 ```python
 from karak import Karak
 
 app = Karak()
+
+
+@app.get(path="/", methods=["GET"])
+async def index():
+    return "Hello from Karak"
 ```
 
-An ASGI server such as Uvicorn calls `app(scope, receive, send)`. The server
-owns the network connections; Karak handles the application logic.
+## Start the development server
 
-## Request handling
+From the directory containing `main.py`, run:
 
-For HTTP requests, the application passes control through exception handling,
-route matching, parameter conversion, the async handler, and the response.
-
-```text
-ASGI server
-  → Karak
-  → ExceptionHandler
-  → Router
-  → Route and parameter validation
-  → Async handler
-  → Response
+```sh
+uv run uvicorn main:app --reload
 ```
 
-Handlers must currently be `async def` functions. A synchronous executor is a
-design goal, not part of the ASGI implementation yet.
+Uvicorn is the server that listens for web requests and runs your application.
+`main:app` means “use the object named `app` in `main.py`.” If you rename the
+file to `example.py`, use `example:app` instead.
 
-## Lifecycle
+Open [localhost:8000](http://127.0.0.1:8000) to try the endpoint. Keep the terminal
+open while you use it; **Ctrl+C** stops the server.
 
-Karak acknowledges ASGI startup and shutdown messages. It does not yet expose
-user-defined startup or shutdown hooks.
+## Edit and try again
 
-## Low-level requests
+With `--reload`, the server restarts when you save changes. Edit the text
+returned by `index()`, save, and refresh your browser.
 
-`Request` wraps an ASGI scope and receive callable. Code that works directly
-with ASGI can use it to read request metadata and body bytes:
+You can add more endpoints to the same `app`. Each endpoint currently needs an
+`async def` function. See [define routes](routing.md) for an example you can add
+to this file.
 
-```python
-from karak import Request
+## Use a different port
 
+If another application already uses port 8000:
 
-async def inspect_request(scope, receive):
-    request = Request(scope, receive)
-    body = await request.body()
-    return request.path, request.method, request.params, body
+```sh
+uv run uvicorn main:app --reload --port 8001
 ```
 
-`params` maps query keys to lists of strings. `body()` consumes request messages
-and joins their chunks. Read the body once and keep the result; it is not cached.
-The method raises `RuntimeError` if the client disconnects while it is reading.
+Open [localhost:8001](http://127.0.0.1:8001) for this server.
 
-This helper is low-level ASGI code, not a registered route. Route handlers do
-not currently receive an injected `Request`. There is no `Request.json()`
-method or automatic body binding.
+## Understand a failed request
 
-## Current scope
+An HTTP 422 response means a supplied value is missing or invalid. Check the
+response message and the endpoint’s [expected inputs](parameters.md).
 
-Dependency injection, WebSockets, user lifecycle hooks, and durable background
-jobs are future work. See [design notes](design.md) for the broader direction.
+An `Internal Server Error` response means the endpoint encountered an
+unexpected error. Look at the traceback in the server terminal to find the
+cause. See [send responses](responses.md#understand-error-responses) for more.
+
+## Can I deploy it to production?
+
+Karak is currently for local experimentation and development. The framework
+is not production-ready, and `--reload` is a development convenience.
+
+A production experience that covers configuration, resource setup, worker
+management, visibility into failures, and graceful shutdown is part of
+[what we plan to build](design.md). There is no Karak deployment command or
+managed background-job system to use yet.

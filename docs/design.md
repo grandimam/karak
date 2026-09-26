@@ -12,6 +12,22 @@ observability.
 The current implementation establishes the ASGI foundation. Reliable background
 work and production operations are part of the longer-term product scope.
 
+### The experience we want to deliver
+
+A developer should be able to receive a request for a customer report, queue
+the work, return promptly, and track the report through completion or failure.
+The same work should be schedulable, share the application’s services, and have
+defined behavior during retries, worker restarts, and deployments.
+
+That experience guides the implementation: complete the API workflows, build
+shared configuration and resource management, then develop durable jobs and
+scheduling with observability and shutdown behavior alongside them. These are
+planned capabilities, not guarantees provided by the current prototype.
+
+See [our vision](content/design.md) for the planned workflows and capability
+status. The rest of this document explores implementation proposals supporting
+those outcomes.
+
 ### Core thesis
 
 > **A simpler path from Python to production.**

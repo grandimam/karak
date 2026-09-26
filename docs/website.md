@@ -29,8 +29,8 @@ source files; GitHub Actions builds and uploads the output.
 ## Editing
 
 - `content/` contains the website’s Markdown pages. These are the sources for
-  published guides; the repository’s `docs/` directory also holds longer design
-  proposals linked from the site.
+  published guides; the Markdown files alongside this guide contain longer
+  design proposals and development notes linked from the site.
 - `mkdocs.yml` defines navigation, metadata, and the canonical site URL.
 - `theme/` contains the shared HTML templates.
 - `content/assets/` contains styles, search behavior, and the favicon.
@@ -67,6 +67,11 @@ The workflow builds on website pull requests and deploys on website changes
 pushed to `main`. You can also run it manually. It uploads only `docs/dist/`.
 Domain setup is stored in GitHub’s Pages settings; a `CNAME` file is not required
 for this Actions-based deployment.
+
+If the workflow reports **Get Pages site failed**, check that the Pages source
+is **GitHub Actions**, not **Deploy from a branch → main → /docs**. The files
+live in `docs/`, but they need the workflow’s MkDocs build before publishing.
+After correcting the setting, rerun the failed Documentation workflow.
 
 Relative assets and links also work under the default project URL,
 `https://grandimam.github.io/karak/`. The canonical URL in `mkdocs.yml` is set to

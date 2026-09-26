@@ -1,41 +1,47 @@
 # Karak documentation
 
-Karak aims to make Python applications easier to take to production, bringing
-APIs, background jobs, workers, and scheduled tasks into one application model.
+Start with a small application, then learn to accept requests and send useful
+responses. These guides describe what you can try today. Karak is experimental;
+background jobs, scheduling, and production operations are still planned.
 
-The current implementation is the ASGI framework in `src/karak/`. A separate
-free-threaded HTTP experiment lives in `experiments/free_threaded/`. Background
-job processing, scheduling, and broader production tooling remain design goals.
+## Get started
 
-## Using Karak
-
-| Guide | Contents |
+| I want to… | Read |
 | --- | --- |
-| [Quick start](../README.md#quick-start) | Install and run the main ASGI framework |
-| [ASGI guide](asgi.md) | Register routes, bind parameters, and return responses |
-| [Request handling](server.md) | Application, router, request, and response internals |
-| [Load testing](load-testing.md) | Measure the current ASGI demo |
-| [Free-threaded experiment](../experiments/free_threaded/README.md) | Run the synchronous server and its benchmarks |
+| Understand what Karak is for | [Introduction](content/introduction.md) |
+| See my first endpoint respond | [Quickstart](content/index.md) |
+| Set up my environment | [Installation](content/installation.md) |
+| Start, edit, and stop my app | [Run an application](content/application.md) |
+| Add an endpoint | [Define routes](content/routing.md) |
+| Accept filters, page numbers, and other input | [Read request values](content/parameters.md) |
+| Return a message or a status code | [Send responses](content/responses.md) |
 
-## Design proposals and working notes
+## Look ahead
 
-These documents record proposed capabilities and development ideas. Their
-example APIs may not exist in the current implementation.
+[Our vision](content/design.md) describes the application experience we want to
+build: APIs, durable background jobs, workers, recurring work, and the tools to
+operate them together. It distinguishes current capabilities from future plans.
+
+If you want to explore synchronous handlers and parallel work, try the
+[free-threaded experiment](content/free-threaded.md).
+
+## Work on Karak
+
+The following documents are for contributors investigating the framework.
+Design proposals may contain APIs that do not exist yet.
 
 | Document | Focus |
 | --- | --- |
-| [Design and execution model](design.md) | Long-term goals, synchronous application code, and parallel execution |
-| [Framework design](framework.md) | Python package structure, resource routing, and dependency lifetimes |
-| [Routing notes](../notes/route.md) | Early reasoning about route registration and validation |
-| [Server notes](../notes/server.md) | Original exploration of the server and router abstractions |
+| [ASGI implementation guide](asgi.md) | Current API details and boundaries |
+| [Request handling](server.md) | How the implementation handles requests |
+| [Load testing](load-testing.md) | Measuring the ASGI demo |
+| [Production goals and execution design](design.md) | Architecture proposals behind the product direction |
+| [Framework design](framework.md) | Resource routing and dependency proposals |
+| [Routing notes](../notes/route.md) | Early route and validation ideas |
+| [Server notes](../notes/server.md) | Server and router exploration |
 | [Worker notes](../notes/workers.md) | Background-task ideas |
 
-The ASGI framework currently uses async handlers. The free-threaded experiment
-uses synchronous handlers and its own socket server. A unified synchronous ASGI
-execution model remains a design goal.
+## Maintain the website
 
-## Documentation website
-
-The [website source](content/index.md), theme, and build configuration live in
-this directory. See [website development and GitHub Pages setup](website.md)
-for preview commands, editing instructions, and deployment configuration.
+The published guides live in `content/`. See [website development and GitHub
+Pages setup](website.md) for local preview, editing, and deployment instructions.

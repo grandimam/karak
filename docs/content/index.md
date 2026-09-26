@@ -1,18 +1,18 @@
 ---
 title: Quickstart
-description: Create and run your first Karak ASGI application.
-summary: Create and run your first Karak application.
+description: Install Karak, create an endpoint, and see your first response in a browser.
 ---
 
 # Start with a little Python.
 
-<p class="lead">Create and run your first Karak application.</p>
+<p class="lead">Create an endpoint and see it respond in your browser.</p>
 
 <p class="page-status">Experimental · Python 3.13+</p>
 
 ## Install
 
-Clone the repository and install the development dependencies.
+You will need Python 3.13+ and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+Open a terminal and run:
 
 ```sh
 git clone https://github.com/grandimam/karak.git
@@ -20,9 +20,12 @@ cd karak
 uv sync
 ```
 
+Stay in the `karak` directory for the steps below. See
+[installation](installation.md) if you need more help with setup.
+
 ## Create an application
 
-Save the following as `main.py` in the project root.
+Create a file called `main.py` in that directory:
 
 ```python
 from karak import Karak
@@ -35,12 +38,29 @@ async def index():
     return "Hello from Karak"
 ```
 
+This tells Karak to run `index()` when someone visits `/`. The text you return
+becomes the response. Use `async def` for your endpoints in the current version.
+
 ## Run it
 
 ```sh
 uv run uvicorn main:app --reload
 ```
 
-Open [localhost:8000](http://127.0.0.1:8000) in your browser.
+Open [localhost:8000](http://127.0.0.1:8000) in your browser. You should see:
 
-[Routing →](routing.md){: .next-link }
+```text
+Hello from Karak
+```
+
+Change the returned text, save `main.py`, and refresh the browser. The
+`--reload` option restarts the development server when you edit a file.
+Press **Ctrl+C** in the terminal when you want to stop it.
+
+## What next?
+
+[Add another endpoint](routing.md), then [accept values from a request](parameters.md).
+For the bigger picture—APIs, jobs, workers, and operating them together—read
+[our vision](design.md).
+
+[Define routes →](routing.md){: .next-link }
