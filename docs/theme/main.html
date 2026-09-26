@@ -47,7 +47,7 @@
       <div class="breadcrumb">{% if page.parent %}{{ page.parent.title | e }} <span aria-hidden="true">/</span> {% endif %}{{ page.title | e }}</div>
       {{ page.content }}
       {% if not page.is_homepage %}
-      <footer class="page-footer"><a href="{{ config.repo_url }}/blob/main/website/content/{{ page.file.src_uri }}">View source <span aria-hidden="true">↗</span></a><a href="{{ '.' | url }}">Quickstart <span aria-hidden="true">→</span></a></footer>
+      <footer class="page-footer"><a href="{{ config.repo_url }}/blob/main/docs/content/{{ page.file.src_uri }}">View source <span aria-hidden="true">↗</span></a><a href="{{ '.' | url }}">Quickstart <span aria-hidden="true">→</span></a></footer>
       {% endif %}
       {% endif %}
       {% endblock %}

@@ -33,3 +33,9 @@ example APIs may not exist in the current implementation.
 The ASGI framework currently uses async handlers. The free-threaded experiment
 uses synchronous handlers and its own socket server. A unified synchronous ASGI
 execution model remains a design goal.
+
+## Documentation website
+
+The [website source](content/index.md), theme, and build configuration live in
+this directory. See [website development and GitHub Pages setup](website.md)
+for preview commands, editing instructions, and deployment configuration.
