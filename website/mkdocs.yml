@@ -1,0 +1,34 @@
+site_name: Karak
+site_description: A simpler path from Python to production. Documentation for the Karak Python framework.
+site_url: https://karak.dev/
+repo_url: https://github.com/grandimam/karak
+docs_dir: content
+site_dir: dist
+use_directory_urls: true
+theme:
+  name: null
+  custom_dir: theme
+  static_templates:
+    - 404.html
+plugins:
+  - search:
+      indexing: sections
+markdown_extensions:
+  - attr_list
+  - fenced_code
+  - tables
+  - toc:
+      permalink: false
+nav:
+  - Getting started:
+      - Introduction: introduction.md
+      - Quickstart: index.md
+      - Installation: installation.md
+  - Framework:
+      - Application: application.md
+      - Routing: routing.md
+      - Parameters: parameters.md
+      - Responses: responses.md
+  - Explore:
+      - Free-threaded experiment: free-threaded.md
+      - Design notes: design.md

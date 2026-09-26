@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f4ec">
+  <title>{% if page %}{{ page.title | e }} · {% endif %}Karak</title>
+  <meta name="description" content="{{ (page.meta.description if page and page.meta.description else config.site_description) | e }}">
+  {% if page and page.canonical_url %}<link rel="canonical" href="{{ page.canonical_url | e }}">{% endif %}
+  <link rel="icon" href="{{ 'assets/favicon.svg' | url }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ 'assets/site.css' | url }}">
+  <script src="{{ 'assets/site.js' | url }}" defer></script>
+</head>
+<body data-search-url="{{ 'search/search_index.json' | url }}" data-site-root="{{ '.' | url }}">
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="site-header">
+    <a class="wordmark" href="{{ '.' | url }}" aria-label="Karak documentation home">karak</a>
+    <div class="header-links">
+      <button class="search-open" type="button" hidden>Search <kbd aria-hidden="true">⌘ K</kbd></button>
+      <a href="{{ config.repo_url }}">GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+  <div class="page-layout">
+    <aside class="sidebar">
+      <details class="mobile-navigation" open>
+        <summary>Documentation <span aria-hidden="true">+</span></summary>
+        <nav aria-label="Documentation">
+          {% for section in nav %}
+          <div class="nav-group">
+            <p class="nav-heading">{{ section.title | e }}</p>
+            <ul>
+            {% for item in section.children %}
+              <li><a href="{{ item.url | url }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.title | e }}</a></li>
+            {% endfor %}
+            </ul>
+          </div>
+          {% endfor %}
+        </nav>
+      </details>
+    </aside>
+    <main id="content" class="article" tabindex="-1">
+      {% block content %}
+      {% if page %}
+      <div class="breadcrumb">{% if page.parent %}{{ page.parent.title | e }} <span aria-hidden="true">/</span> {% endif %}{{ page.title | e }}</div>
+      {{ page.content }}
+      {% if not page.is_homepage %}
+      <footer class="page-footer"><a href="{{ config.repo_url }}/blob/main/website/content/{{ page.file.src_uri }}">View source <span aria-hidden="true">↗</span></a><a href="{{ '.' | url }}">Quickstart <span aria-hidden="true">→</span></a></footer>
+      {% endif %}
+      {% endif %}
+      {% endblock %}
+    </main>
+  </div>
+  <dialog id="search-dialog" aria-labelledby="search-label">
+    <form method="dialog" class="search-header"><label id="search-label" for="search-input">Search the documentation</label><button aria-label="Close search" class="search-close">Close <kbd>Esc</kbd></button></form>
+    <input id="search-input" type="search" placeholder="Routing, parameters, responses…" autocomplete="off" spellcheck="false">
+    <p id="search-status" class="search-status" role="status">Type to find a page.</p>
+    <ul id="search-results" class="search-results" aria-label="Search results"></ul>
+  </dialog>
+</body>
+</html>
