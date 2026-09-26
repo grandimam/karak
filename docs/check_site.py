@@ -40,14 +40,25 @@ def main():
         link = urlsplit(value)
         if link.scheme or link.netloc:
             return
-        target = (root / unquote(link.path).lstrip("/") if link.path.startswith("/")
-                  else source.parent / unquote(link.path)) if link.path else source
+        target = (
+            (
+                root / unquote(link.path).lstrip("/")
+                if link.path.startswith("/")
+                else source.parent / unquote(link.path)
+            )
+            if link.path
+            else source
+        )
         if target.is_dir():
             target /= "index.html"
         target = target.resolve()
         if not target.is_relative_to(root.resolve()) or not target.exists():
             errors.append(f"{source.relative_to(root)}: missing target {value}")
-        elif link.fragment and target in pages and unquote(link.fragment) not in pages[target].ids:
+        elif (
+            link.fragment
+            and target in pages
+            and unquote(link.fragment) not in pages[target].ids
+        ):
             errors.append(f"{source.relative_to(root)}: missing anchor {value}")
 
     assert root.joinpath("index.html").exists(), "Build the site first."
@@ -61,7 +72,9 @@ def main():
     for document in index["docs"]:
         check_link(root / "index.html", document["location"])
     assert not errors, "\n".join(errors)
-    print(f"Checked {len(pages)} pages, local links, assets, and {len(index['docs'])} search records.")
+    print(
+        f"Checked {len(pages)} pages, local links, assets, and {len(index['docs'])} search records."
+    )
 
 
 if __name__ == "__main__":

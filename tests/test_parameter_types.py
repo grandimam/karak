@@ -7,7 +7,7 @@ from enum import IntEnum
 from typing import Literal
 from uuid import UUID
 
-from karak.inspector import Inspector
+from karak.utils import Inspector
 from karak.server import Karak
 from tests.test_route_validation import make_request
 
@@ -41,8 +41,11 @@ class ParameterTypeTests(unittest.TestCase):
             (float, b"value=1.25", 1.25),
             (UUID, f"value={identifier}".encode(), UUID(identifier)),
             (date, b"value=2026-09-25", date(2026, 9, 25)),
-            (datetime, b"value=2026-09-25T12:30:00Z",
-             datetime.fromisoformat("2026-09-25T12:30:00+00:00")),
+            (
+                datetime,
+                b"value=2026-09-25T12:30:00Z",
+                datetime.fromisoformat("2026-09-25T12:30:00+00:00"),
+            ),
             (Decimal, b"value=0.1234567890123456789", Decimal("0.1234567890123456789")),
             (Status, b"value=shipped", Status.shipped),
             (Priority, b"value=2", Priority.high),
@@ -50,7 +53,11 @@ class ParameterTypeTests(unittest.TestCase):
             (Literal[1, 2], b"value=2", 2),
             (Literal[True], b"value=true", True),
             (list[int], b"value=3&value=1&value=3", [3, 1, 3]),
-            (list[Status], b"value=pending&value=shipped", [Status.pending, Status.shipped]),
+            (
+                list[Status],
+                b"value=pending&value=shipped",
+                [Status.pending, Status.shipped],
+            ),
             (list[Literal["price", "newest"]], b"value=price", ["price"]),
             (str, b"value=", ""),
             (list[str], b"value=&value=hello", ["", "hello"]),
@@ -100,11 +107,16 @@ class ParameterTypeTests(unittest.TestCase):
 
     def test_unsupported_annotations_fail_at_registration(self):
         for annotation, path_names in [
-            (list[int], {"value"}), (list, set()),
-            (list[list[int]], set()), (dict[str, int], set()),
-            (bytes, set()), (bytearray, set()), (complex, set()),
+            (list[int], {"value"}),
+            (list, set()),
+            (list[list[int]], set()),
+            (dict[str, int], set()),
+            (bytes, set()),
+            (bytearray, set()),
+            (complex, set()),
         ]:
             with self.subTest(annotation=annotation, path_names=path_names):
+
                 def handler(value):
                     pass
 

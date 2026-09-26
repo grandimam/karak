@@ -6,6 +6,7 @@ from functools import cached_property
 from karak.types import Receive
 from karak.types import Scope
 
+
 @dataclass
 class Request:
     scope: Scope

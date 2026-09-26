@@ -95,9 +95,7 @@ and the router returns HTTP 405 as soon as it finds a matching path with a
 different method. Avoid registering separate method-specific handlers for the
 same path until method selection is improved.
 
-The [design documents](README.md#design-proposals-and-working-notes) describe
-future capabilities. The [free-threaded experiment](../experiments/free_threaded/README.md)
-has its own synchronous API and server; its features are separate from this API.
+The [design documents](README.md#work-on-karak) describe future capabilities.
 
 ## Development
 

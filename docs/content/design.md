@@ -98,8 +98,7 @@ parallel computation. You should be able to benefit from free-threaded Python
 where it fits your workload, with understandable controls over workers and
 resource use.
 
-The [free-threaded experiment](free-threaded.md) explores that direction today.
-It is separate from the main framework. A unified synchronous experience is a
+A unified synchronous experience is a
 longer-term goal; the main framework currently uses `async def` endpoints.
 
 ## The path we plan to take
@@ -111,7 +110,7 @@ longer-term goal; the main framework currently uses `async def` endpoints.
 | Reliable background jobs | Submit work, track it, retry failures, and recover after interruptions | Planned |
 | Recurring work | Schedule jobs and understand missed or overlapping runs | Planned |
 | Production operations | Configure, observe, and shut down APIs and workers consistently | Planned |
-| Free-threaded execution | Explore synchronous Python and parallel workloads | Separate experiment |
+| Free-threaded execution | Explore synchronous Python and parallel workloads | Planned |
 
 The intended progression is to strengthen the API experience, establish shared
 configuration and resource management, then build reliable jobs and scheduling

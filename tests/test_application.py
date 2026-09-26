@@ -20,10 +20,12 @@ class ApplicationTests(unittest.TestCase):
 
     def test_lifespan_acknowledges_startup_and_shutdown(self):
         app = Karak()
-        events = iter([
-            {"type": "lifespan.startup"},
-            {"type": "lifespan.shutdown"},
-        ])
+        events = iter(
+            [
+                {"type": "lifespan.startup"},
+                {"type": "lifespan.shutdown"},
+            ]
+        )
         messages = []
 
         async def receive():
@@ -33,7 +35,10 @@ class ApplicationTests(unittest.TestCase):
             messages.append(message)
 
         asyncio.run(app({"type": "lifespan"}, receive, send))
-        self.assertEqual(messages, [
-            {"type": "lifespan.startup.complete"},
-            {"type": "lifespan.shutdown.complete"},
-        ])
+        self.assertEqual(
+            messages,
+            [
+                {"type": "lifespan.startup.complete"},
+                {"type": "lifespan.shutdown.complete"},
+            ],
+        )

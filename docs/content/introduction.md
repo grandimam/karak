@@ -45,10 +45,3 @@ understand failures, and deploy changes with predictable behavior.
 
 Read [what we plan to build](design.md) for the intended experience and the
 steps toward it.
-
-## Curious about free-threaded Python?
-
-There is also a [separate experiment](free-threaded.md) for trying synchronous
-handlers and parallel execution. It has a different API and is intended for
-exploration. Start with the main guides if you want to learn Karak’s current
-API.

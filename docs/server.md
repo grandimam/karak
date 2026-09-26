@@ -62,12 +62,5 @@ For lifespan scopes, the application acknowledges `lifespan.startup` and
 `lifespan.shutdown`. User-defined startup and shutdown callbacks remain future
 work for the ASGI implementation.
 
-## Free-threaded server
-
-The [free-threaded experiment](../experiments/free_threaded/README.md) owns its
-socket server, HTTP parser, and thread pool. It executes synchronous handlers
-and is started with `app.run(...)`. That server is preserved under
-`experiments/free_threaded/` and does not serve the main ASGI application.
-
 The [original server notes](../notes/server.md) preserve the earlier design
 exploration, including proposed APIs.

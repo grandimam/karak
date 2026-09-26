@@ -1,6 +1,6 @@
 # Karak — Production Goals, Design & Philosophy
 
-> **Design proposal.** These notes describe future architecture and APIs. The main `karak` package currently uses async ASGI handlers. A separate synchronous, free-threaded implementation is available in `experiments/free_threaded/`; a unified synchronous ASGI executor remains a goal. See the [ASGI guide](asgi.md), [experiment guide](../experiments/free_threaded/README.md), and [documentation index](README.md) for current behavior.
+> **Design proposal.** These notes describe future architecture and APIs. The main `karak` package currently uses async ASGI handlers. A synchronous ASGI executor with free-threaded support remains a goal. See the [ASGI guide](asgi.md) and [documentation index](README.md) for current behavior.
 
 ## 1. Vision
 
@@ -1524,9 +1524,9 @@ assembly for developers: shared configuration, dependencies, lifecycle,
 failure handling, and observability. Production readiness must be demonstrated
 through explicit guarantees and validation as each capability is implemented.
 
-ASGI support and free-threaded execution serve that promise. The main ASGI
-framework is the current foundation; the free-threaded HTTP implementation is
-an experiment. Durable background jobs and scheduling remain future work.
+ASGI support and planned free-threaded execution serve that promise. The ASGI
+framework is the current foundation. Durable background jobs and scheduling
+remain future work.
 
 ---
 

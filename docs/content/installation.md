@@ -13,8 +13,7 @@ Use Python 3.13 or newer and
 [install uv](https://docs.astral.sh/uv/getting-started/installation/) to manage the
 project environment. You will also need Git to download the repository.
 
-You can use standard Python. The free-threaded build is only needed when
-exploring parallel execution in the [separate experiment](free-threaded.md).
+You can use standard Python.
 
 ## Set up the project
 

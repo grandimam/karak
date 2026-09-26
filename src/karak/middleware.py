@@ -12,7 +12,6 @@ logger = logging.getLogger("karak.errors")
 
 
 class ExceptionHandler:
-
     def __init__(self, app: KarakApp) -> None:
         self._app = app
 
@@ -27,4 +26,6 @@ class ExceptionHandler:
                 scope.get("method", ""),
                 scope.get("path", ""),
             )
-            await Response(status_code=500, content="Internal Server Error")(scope, receive, send)
+            await Response(status_code=500, content="Internal Server Error")(
+                scope, receive, send
+            )

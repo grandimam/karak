@@ -6,13 +6,11 @@
 
 Karak aims to make APIs, background jobs, workers, and scheduled tasks easier to build, run, and operate together in Python.
 
-**A free-threaded version is also available** as a [separate experiment](experiments/free_threaded/README.md), with a synchronous API, its own HTTP server, and benchmarks.
-
 ![Status: Experimental](https://img.shields.io/badge/status-experimental-orange)
 ![Python: 3.13+](https://img.shields.io/badge/python-3.13%2B-3776AB?logo=python&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-[Quick start](#quick-start) · [Free-threaded version](#free-threaded-version) · [Documentation](docs/README.md) · [Development](#development)
+[Quick start](#quick-start) · [Documentation](docs/README.md) · [Development](#development)
 
 </div>
 
@@ -38,9 +36,7 @@ visibility into that work to feel consistent from start to finish.
 
 The current implementation starts with the HTTP foundation: an ASGI application,
 typed routing, validation, and error handling. Durable jobs, scheduling, worker
-management, and production tooling are goals for future development. A separate
-[free-threaded experiment](experiments/free_threaded/README.md) explores
-synchronous handlers and parallel execution.
+management, and production tooling are goals for future development.
 
 Read [our vision and plans](docs/content/design.md) for the experience we want
 to build and the current status of each area.
@@ -129,34 +125,6 @@ Missing required parameters and invalid values produce **HTTP 422** responses. R
 
 The [design document](docs/design.md) describes planned work, including synchronous execution, dependency injection, JSON responses, and a thread-based executor.
 
-## Free-threaded version
-
-Karak also includes a **free-threaded HTTP experiment** in
-[`experiments/free_threaded/`](experiments/free_threaded/README.md). It explores
-synchronous application code and parallel execution within Karak.
-
-| | Main ASGI implementation | Free-threaded experiment |
-| --- | --- | --- |
-| Import | `from karak import Karak` | `from experiments.free_threaded import Karak` |
-| Handlers | `async def` | `def` |
-| Server | An ASGI server, such as Uvicorn | Built-in socket server and thread pool |
-| Example | `examples/basic.py` | `experiments/free_threaded/examples/basic.py` |
-| Distribution | Installed as the `karak` package | Available from this repository |
-
-To run the experiment, use a free-threaded Python build and run these commands
-from the repository root:
-
-```bash
-uv sync --group experiments --python 3.13t
-uv run --group experiments --python 3.13t python -m experiments.free_threaded.examples.basic
-```
-
-The experiment includes dependency injection, Pydantic request bodies, JSON
-responses, and HTTP keep-alive. Those features belong to the experimental
-implementation; they are not yet implemented in the main ASGI framework.
-See its [guide and historical benchmarks](experiments/free_threaded/README.md)
-for details. The historical results measure the threaded implementation only.
-
 ## Development
 
 Install dependencies and run the test suite:
@@ -168,7 +136,7 @@ uv run python -m unittest discover -s tests
 
 | Resource | What you'll find |
 | --- | --- |
-| [Documentation](docs/README.md) | Current guides, experiment, and design proposals |
+| [Documentation](docs/README.md) | Current guides and design proposals |
 | [Documentation website](docs/website.md) | Local preview, editing, and GitHub Pages deployment |
 | [ASGI guide](docs/asgi.md) | Routes, parameters, responses, and current limitations |
 | [Request handling](docs/server.md) | How the ASGI implementation handles requests |
@@ -186,7 +154,6 @@ examples/exploration.py     # Exploratory demo and development notes
 tests/                     # ASGI routing and validation tests
 docs/                      # Design proposals and load-testing guide
 notes/                     # Development notes
-experiments/free_threaded/  # Threaded HTTP experiment and benchmarks
 ```
 
 Run the included demo with `uv run uvicorn examples.basic:app --reload`.

@@ -12,26 +12,17 @@ from karak.middleware import ExceptionHandler
 
 
 class Karak:
-    def __init__(
-        self,
-        *,
-        routes: list[BaseRoute] | None = None
-    ) -> None:
+    def __init__(self, *, routes: list[BaseRoute] | None = None) -> None:
         if not routes:
             routes = []
         self._router = Router(routes=routes)
         self._app = ExceptionHandler(self._router)
 
-
-    def get(
-            self,
-            *,
-            path: str,
-            methods: list[str]
-    ):
+    def get(self, *, path: str, methods: list[str]):
         def wrap(func: Callable):
             self._router.add_route(path=path, methods=methods, handler=func)
             return func
+
         return wrap
 
     async def _lifespan(
@@ -55,7 +46,6 @@ class Karak:
         send: Send,
     ) -> None:
         await self._app(scope, receive, send)
-
 
     async def __call__(
         self,

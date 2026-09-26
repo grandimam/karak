@@ -132,19 +132,3 @@ CPU-bound in routing, request parsing, or response generation.
 
 If p99 jumps far earlier than p50, you likely have queueing contention under
 load.
-
-## Free-threaded experiment
-
-The original threaded benchmarks are preserved alongside their implementation.
-From the repository root, run:
-
-```bash
-uv sync --group experiments --python 3.13t
-uv run --group experiments --python 3.13t python -m experiments.free_threaded.benchmarks.run_benchmark 1000 10
-```
-
-This runner starts the threaded experiment on port 8001 and its FastAPI
-comparison on port 8002. It does not benchmark the main Karak ASGI framework.
-See the [experiment guide](../experiments/free_threaded/README.md) for its
-historical measurements. Record the implementation, interpreter, worker count,
-and workload with every result so the two implementations remain distinguishable.

@@ -22,9 +22,6 @@ background jobs, scheduling, and production operations are still planned.
 build: APIs, durable background jobs, workers, recurring work, and the tools to
 operate them together. It distinguishes current capabilities from future plans.
 
-If you want to explore synchronous handlers and parallel work, try the
-[free-threaded experiment](content/free-threaded.md).
-
 ## Work on Karak
 
 The following documents are for contributors investigating the framework.

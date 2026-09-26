@@ -60,9 +60,6 @@ Automatic JSON responses, custom headers, and streaming are not available in
 the main framework yet. Use text or bytes for the current examples. JSON
 request and response support is part of [the plan](design.md).
 
-The [free-threaded experiment](free-threaded.md) already has its own JSON
-response support, but it uses a separate application API.
-
 ## Understand error responses
 
 | Response | What to do |
