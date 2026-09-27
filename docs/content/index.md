@@ -32,13 +32,17 @@ Create a file called `main.py` in that directory:
 
 ```python
 from karak import Karak
+from karak import Router
 
-app = Karak()
+router = Router()
 
 
-@app.get(path="/", methods=["GET"])
+@router.get("/")
 async def index():
     return "Hello from Karak"
+
+
+app = Karak(routes=router.routes)
 ```
 
 This tells Karak to run `index()` when someone visits `/`. The text you return

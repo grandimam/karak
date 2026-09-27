@@ -12,13 +12,17 @@ one in `main.py` and add your first endpoint:
 
 ```python
 from karak import Karak
+from karak import Router
 
-app = Karak()
+router = Router()
 
 
-@app.get(path="/", methods=["GET"])
+@router.get("/")
 async def index():
     return "Hello from Karak"
+
+
+app = Karak(routes=router.routes)
 ```
 
 ## Start the development server
@@ -41,7 +45,7 @@ open while you use it; **Ctrl+C** stops the server.
 With `--reload`, the server restarts when you save changes. Edit the text
 returned by `index()`, save, and refresh your browser.
 
-You can add more endpoints to the same `app`. Each endpoint currently needs an
+You can add more endpoints to the same `router` before constructing the app. Each endpoint currently needs an
 `async def` function. See [define routes](routing.md) for an example you can add
 to this file.
 

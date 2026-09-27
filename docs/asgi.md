@@ -4,13 +4,13 @@ Karak’s main implementation is an ASGI application. It runs on Python 3.13+,
 uses async route handlers, and has no runtime dependencies. Use an ASGI server
 such as Uvicorn to serve it.
 
-## Run the included example
+## Run an example
 
-From the repository root:
+Save the application below as `example.py`, then run from the repository root:
 
 ```bash
 uv sync
-uv run uvicorn examples.basic:app --reload
+uv run uvicorn example:app --reload
 ```
 
 Then, in another terminal:
@@ -27,27 +27,30 @@ Save this as `example.py` in the repository root:
 
 ```python
 from karak import Karak
+from karak import Router
 from karak import Response
 
-app = Karak()
+router = Router()
 
 
-@app.get(path="/users/{user_id}", methods=["GET"])
+@router.get("/users/{user_id}")
 async def user(user_id: int, active: bool = True):
     return f"User {user_id} · active={active}"
 
 
-@app.get(path="/accepted", methods=["GET"])
+@router.get("/accepted")
 async def accepted():
     return Response(status_code=202, content="Accepted")
+
+
+app = Karak(routes=router.routes)
 ```
 
 Run it with `uv run uvicorn example:app --reload`.
 
-The current decorator takes keyword arguments: `path=` and `methods=`.
-Despite its name, `app.get(...)` registers the methods supplied in `methods`.
-Separate `app.post(...)`, `app.put(...)`, and `app.delete(...)` helpers are not
-implemented in the ASGI version.
+Define endpoints with `@router.get(path)` or `@router.post(path)`, then construct
+`Karak(routes=router.routes)`. The decorator selects the HTTP method. The app
+copies the supplied routes, so declare endpoints before constructing it.
 
 ## Path and query parameters
 
@@ -59,11 +62,11 @@ A Python default makes a query parameter optional. For example, `active: bool =
 True` uses `True` when the query key is absent. A present empty value, such as
 `name=`, is passed through conversion; it is valid for a string.
 
-The [supported types table](../README.md#parameter-types) lists the available
+The [supported types table](../README.md#types-do-the-parsing) lists the available
 converters. Use `list[T]` for repeated query values:
 
 ```python
-@app.get(path="/tags", methods=["GET"])
+@router.get("/tags")
 async def tags(tag: list[str]):
     return ", ".join(tag)
 ```
@@ -72,6 +75,12 @@ async def tags(tag: list[str]):
 query parameters. Repeated scalar keys, missing required values, and invalid
 values produce HTTP 422 responses. Unsupported annotations and missing path
 parameters in the handler signature fail during route registration.
+
+## Mount declarations
+
+`Mount(path, router)` stores a prefix and a child router. Mount dispatch and
+inherited path parameters are not implemented. See the
+[routing guide](content/routing.md#mount-declarations) for the current boundary.
 
 ## Responses and errors
 
@@ -90,10 +99,10 @@ provide user-defined lifecycle hooks. Dependency injection, automatic request
 body binding, injected `Request` parameters, WebSockets, and a synchronous
 handler executor are also not implemented.
 
-Routing remains a prototype: an unmatched path currently returns HTTP 500,
-and the router returns HTTP 405 as soon as it finds a matching path with a
-different method. Avoid registering separate method-specific handlers for the
-same path until method selection is improved.
+Routing remains a prototype: an unmatched path currently returns HTTP 500.
+Routes are checked in registration order; put static paths before overlapping
+parameterized paths. HTTP 405 is returned when paths match but none accepts the
+requested method.
 
 The [design documents](README.md#work-on-karak) describe future capabilities.
 

@@ -9,10 +9,11 @@ description: Return a message, choose a status code, and understand the errors c
 
 ## Return a message
 
-Return a string from your endpoint to send a text response with HTTP 200:
+Using the router from the quickstart, return a string from your endpoint to
+send a text response with HTTP 200:
 
 ```python
-@app.get(path="/", methods=["GET"])
+@router.get("/")
 async def index():
     return "Hello from Karak"
 ```
@@ -26,16 +27,20 @@ example you can save as `main.py`:
 
 ```python
 from karak import Karak
+from karak import Router
 from karak import Response
 
-app = Karak()
+router = Router()
 
 
-@app.get(path="/users/{user_id}", methods=["GET"])
+@router.get("/users/{user_id}")
 async def user(user_id: int):
     if user_id != 42:
         return Response(status_code=404, content="User not found")
     return "User 42"
+
+
+app = Karak(routes=router.routes)
 ```
 
 Start it with `uv run uvicorn main:app --reload`, then inspect the status and
@@ -67,6 +72,6 @@ request and response support is part of [the plan](design.md).
 | HTTP 422 | Check the parameter named in the response. A required value may be missing or have the wrong format. |
 | HTTP 500 with `Internal Server Error` | Check the server terminal for the traceback from your endpoint. |
 | HTTP 500 with `Route Not Found` | Check the requested URL. Unknown paths do not return 404 yet. |
-| HTTP 405 | Check the allowed methods and whether you registered the same path more than once. |
+| HTTP 405 | Check that the endpoint supports the requested HTTP method. |
 
 For the routing-related cases, see [current limitations](routing.md#prototype-limitations).

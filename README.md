@@ -98,13 +98,17 @@ Create `example.py` in the repository root:
 
 ```python
 from karak import Karak
+from karak import Router
 
-app = Karak()
+router = Router()
 
 
-@app.get(path="/users/{user_id}", methods=["GET"])
+@router.get("/users/{user_id}")
 async def get_user(user_id: int, active: bool = True):
     return f"User {user_id} · active={active}"
+
+
+app = Karak(routes=router.routes)
 ```
 
 `user_id` comes from the path. `active` comes from the query string and defaults
@@ -135,14 +139,14 @@ Use Python annotations to describe the values your endpoint accepts. Named path
 parameters come from the URL path; other parameters come from the query string.
 Python defaults apply when a query parameter is omitted.
 
-Add this route to `example.py` to combine repeated query values with a restricted
-set of choices:
+Add this route above `app = Karak(routes=router.routes)` in `example.py` to
+combine repeated query values with a restricted set of choices:
 
 ```python
 from typing import Literal
 
 
-@app.get(path="/products", methods=["GET"])
+@router.get("/products")
 async def products(tag: list[str], sort: Literal["price", "newest"] = "newest"):
     return f"Tags: {', '.join(tag)} · sort={sort}"
 ```
@@ -185,13 +189,13 @@ Unsupported annotations are rejected when the route is registered.
 ## Choose the response
 
 Return a string or bytes directly, or use `Response` to set a status code. Add
-this route to the same application:
+this route before constructing the application:
 
 ```python
 from karak import Response
 
 
-@app.get(path="/greetings", methods=["POST"])
+@router.post("/greetings")
 async def create_greeting(name: str):
     return Response(status_code=201, content=f"Hello, {name}")
 ```
@@ -200,9 +204,8 @@ async def create_greeting(name: str):
 curl -i -X POST 'http://127.0.0.1:8000/greetings?name=Karak'
 ```
 
-This returns **HTTP 201** with the body `Hello, Karak`. In the current API,
-`app.get` registers routes for the explicitly supplied `methods`, including
-`POST`. JSON responses are planned.
+This returns **HTTP 201** with the body `Hello, Karak`. Use `router.get` for
+GET endpoints and `router.post` for POST endpoints. JSON responses are planned.
 
 [Read the response guide →](docs/content/responses.md)
 
@@ -214,7 +217,7 @@ replacement goals.
 
 | Area | Today | Direction |
 | :--- | :--- | :--- |
-| **HTTP** | ASGI, method matching, typed inputs, validation, text and bytes | JSON, shared dependencies, generated API documentation |
+| **HTTP** | ASGI, router decorators, typed inputs, validation, text and bytes | Mount routing, JSON, shared dependencies, generated API documentation |
 | **Application lifecycle** | Startup and shutdown acknowledgements | Resource setup, cleanup, and graceful shutdown |
 | **Background work** | Planned | Database-backed jobs, workers, retries, and failure recovery |
 | **Recurring work** | Planned | Scheduling with defined behavior for missed and overlapping runs |
@@ -262,6 +265,7 @@ src/karak/
 │   ├── __init__.py
 │   ├── routes.py          # Route definitions and dispatch
 │   ├── router.py          # Route selection
+│   ├── mount.py           # Router mount declarations
 │   └── matching.py        # Path patterns and match results
 ├── parameters/
 │   ├── __init__.py

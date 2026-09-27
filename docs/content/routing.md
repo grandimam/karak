@@ -8,10 +8,11 @@ description: Give your application endpoints and read values from their URLs.
 <p class="lead">Choose the URL someone visits and the function that answers it.</p>
 
 A route connects a URL to your code. In the [quickstart](index.md), `/` returned
-a greeting. To add a user endpoint, put this below your existing `app = Karak()`:
+a greeting. Define endpoints on your `router`, then pass `router.routes` into
+`Karak` when constructing the application. Add this before that constructor:
 
 ```python
-@app.get(path="/users/{user_id}", methods=["GET"])
+@router.get("/users/{user_id}")
 async def user(user_id: int):
     return f"User {user_id}"
 ```
@@ -37,7 +38,7 @@ Use query parameters for values such as filters or page numbers. Add this
 parameter to the same user endpoint:
 
 ```python
-@app.get(path="/users/{user_id}", methods=["GET"])
+@router.get("/users/{user_id}")
 async def user(user_id: int, active: bool = True):
     return f"User {user_id} · active={active}"
 ```
@@ -51,12 +52,45 @@ other supported types.
 
 ## Choose an HTTP method
 
-The current decorator takes both `path=` and `methods=`. Although it is named
-`app.get`, the list supplied in `methods` determines which methods it accepts.
-Separate `app.post`, `app.put`, and `app.delete` helpers are not available yet.
+Use `@router.get(path)` for GET endpoints and `@router.post(path)` for POST
+endpoints. The decorator selects the HTTP method; there is no `methods=`
+argument. Other method decorators and automatic JSON request-body handling are
+still planned.
 
-The current guides focus on GET endpoints. Automatic JSON request-body
-handling is still planned.
+```python
+@router.post("/users")
+async def create_user(name: str):
+    return f"Created {name}"
+```
+
+## Construct the application
+
+After defining your endpoints, pass the router's routes into the application:
+
+```python
+app = Karak(routes=router.routes)
+```
+
+The application copies that list during initialization. Finish decorating your
+router before constructing the app. There is no routing compilation or freeze
+step at startup, and the router remains editable. Later additions to the
+original router are not added to an already constructed application's copy.
+
+## Mount declarations
+
+`Mount` currently holds a path prefix and a child router:
+
+```python
+from karak import Mount
+from karak import Router
+
+users = Router()
+api = Router(routes=[Mount(path="/users", router=users)])
+```
+
+**Mount dispatch is not implemented.** The declaration is available for the
+routing design; nested paths and inherited parameters are not resolved yet.
+Attempting to dispatch through a mount raises `NotImplementedError`.
 
 ## Prototype limitations
 
@@ -64,9 +98,10 @@ Keep these limitations in mind when trying routes:
 
 - Use matching names for path placeholders and function parameters, and
   annotate every parameter. Mistakes here prevent the endpoint from being added.
-- Avoid registering different method-specific handlers for the same path.
-  A request can receive HTTP 405 before reaching the intended handler.
 - An unknown URL currently returns HTTP 500 with `Route Not Found`, rather
   than HTTP 404. Check the URL and the routes you have defined.
-- Keep literal paths simple. Characters such as `.` and `+` can be interpreted
-  as patterns instead of matching exactly as written.
+- Routes are checked in registration order. Put static paths before overlapping
+  parameterized paths. A method mismatch continues searching for a matching
+  endpoint before returning HTTP 405.
+- Literal characters such as `.` and `+` match exactly; `{name}` introduces a
+  path parameter.

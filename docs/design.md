@@ -82,7 +82,7 @@ for ordinary HTTP applications.
 A basic endpoint should look like:
 
 ```python
-@app.get("/users/{user_id}")
+@router.get("/users/{user_id}")
 def get_user(user_id: int):
     return users.get(user_id)
 ```
@@ -100,7 +100,7 @@ The developer describes **what the application does**, while the framework decid
 Application code should be ordinary Python.
 
 ```python
-@app.get("/users")
+@router.get("/users")
 def users():
     return repository.list_users()
 ```
@@ -242,7 +242,7 @@ Must support:
 Example:
 
 ```python
-@app.get("/users/{user_id}")
+@router.get("/users/{user_id}")
 def get_user(user_id: int):
     ...
 ```
@@ -258,7 +258,7 @@ Avoid performing expensive reflection or parsing on every request.
 Create a lightweight request object.
 
 ```python
-@app.get("/users")
+@router.get("/users")
 def users(request: Request):
     ...
 ```
@@ -367,7 +367,7 @@ def database():
     return Database()
 
 
-@app.get("/users")
+@router.get("/users")
 def users(db: Database = Depends(database)):
     return db.users()
 ```
@@ -682,7 +682,7 @@ Never leak internal exception information by default.
 Use Python typing as the primary interface.
 
 ```python
-@app.get("/users/{user_id}")
+@router.get("/users/{user_id}")
 def get_user(user_id: int):
     ...
 ```
@@ -754,7 +754,7 @@ Streaming must be first-class.
 Example:
 
 ```python
-@app.get("/stream")
+@router.get("/stream")
 def stream():
     return Stream(generator())
 ```
@@ -792,7 +792,7 @@ current implementation provides a durable task queue.
 The following API sketch explores in-process background work:
 
 ```python
-@app.post("/users")
+@router.post("/users")
 def create_user(background: Background):
     background.submit(send_email)
     return {"created": True}
@@ -1126,7 +1126,7 @@ Advanced users should be able to control execution.
 For example:
 
 ```python
-@app.get("/cpu-intensive")
+@router.get("/cpu-intensive")
 @parallel
 def compute():
     ...
@@ -1135,7 +1135,7 @@ def compute():
 or:
 
 ```python
-@app.get("/io-intensive")
+@router.get("/io-intensive")
 @concurrent
 def fetch():
     ...
@@ -1361,7 +1361,7 @@ from karak import App
 app = App()
 
 
-@app.get("/hello")
+@router.get("/hello")
 def hello():
     return {"message": "hello"}
 ```
@@ -1369,7 +1369,7 @@ def hello():
 Typed parameters:
 
 ```python
-@app.get("/users/{user_id}")
+@router.get("/users/{user_id}")
 def get_user(user_id: int):
     return repository.get(user_id)
 ```
@@ -1377,7 +1377,7 @@ def get_user(user_id: int):
 Request:
 
 ```python
-@app.post("/users")
+@router.post("/users")
 def create_user(user: User):
     return repository.create(user)
 ```
@@ -1385,7 +1385,7 @@ def create_user(user: User):
 Dependency:
 
 ```python
-@app.get("/users")
+@router.get("/users")
 def users(db: Database = Depends(get_database)):
     return db.users()
 ```
@@ -1614,7 +1614,7 @@ persistence, lifecycle, and failure semantics.
 Before writing the router, validation system, or OpenAPI generator, prove this:
 
 ```python
-@app.get("/compute")
+@router.get("/compute")
 def compute():
     return expensive_cpu_work()
 ```

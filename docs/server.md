@@ -21,11 +21,14 @@ ASGI server
     → ASGI send
 ```
 
-During registration, `inspect_handler` reads the handler signature and annotations,
-checks path placeholders, and selects converters. During a request, `Router`
-checks the registered routes in order. The matching `Route` builds the handler
-arguments from path and query values, awaits the handler, and sends its result
-through a `Response`.
+Router decorators register each endpoint. `inspect_handler` reads its signature
+and annotations, checks path placeholders, and selects converters. The
+application receives a copy of `router.routes` during initialization.
+
+During a request, `Router` checks its routes in order. The matching `Route`
+builds handler arguments from path and query values, awaits the handler, and
+sends its result through a `Response`. There is no routing compilation or
+freezing stage. `Mount` is a declaration only; mount dispatch remains unfinished.
 
 See the [ASGI guide](asgi.md) for runnable examples and routing limitations.
 

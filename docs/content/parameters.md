@@ -8,10 +8,10 @@ description: Accept filters, page numbers, and repeated values, with useful defa
 <p class="lead">Use Python types and defaults to describe a request.</p>
 
 Suppose you want a user endpoint with a page number and an active-user filter.
-Add it to your application:
+Add it to your router before constructing the application:
 
 ```python
-@app.get(path="/users/{user_id}", methods=["GET"])
+@router.get("/users/{user_id}")
 async def user(user_id: int, page: int = 1, active: bool = True):
     return f"User {user_id} · page={page} · active={active}"
 ```
@@ -39,7 +39,7 @@ A default such as `page: int = 1` is used when the caller omits that query key.
 Without a default, a value is required. For example:
 
 ```python
-@app.get(path="/search", methods=["GET"])
+@router.get("/search")
 async def search(term: str):
     return f"Searching for {term}"
 ```
@@ -53,7 +53,7 @@ while `page=` fails integer conversion.
 Use a list when the caller should be able to repeat a query key:
 
 ```python
-@app.get(path="/tags", methods=["GET"])
+@router.get("/tags")
 async def tags(tag: list[str]):
     return ", ".join(tag)
 ```
@@ -68,7 +68,7 @@ HTTP 422.
 from typing import Literal
 
 
-@app.get(path="/products", methods=["GET"])
+@router.get("/products")
 async def products(sort: Literal["price", "newest"] = "newest"):
     return f"Sort by {sort}"
 ```
