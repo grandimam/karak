@@ -8,7 +8,7 @@ from karak.types import Send
 
 from karak.routing import BaseRoute
 from karak.routing import Router
-from karak.middleware import ExceptionHandler
+from karak.middleware import ExceptionMiddleware
 
 
 class Karak:
@@ -16,7 +16,7 @@ class Karak:
         if not routes:
             routes = []
         self._router = Router(routes=routes)
-        self._app = ExceptionHandler(self._router)
+        self._app = ExceptionMiddleware(self._router)
 
     def get(self, *, path: str, methods: list[str]):
         def wrap(func: Callable):

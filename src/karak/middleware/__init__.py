@@ -1,3 +1,3 @@
-from karak.middleware.exceptions import ExceptionHandler
+from karak.middleware.exceptions import ExceptionMiddleware
 
-__all__ = ["ExceptionHandler"]
+__all__ = ["ExceptionMiddleware"]

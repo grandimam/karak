@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Any
 
 from karak.exceptions import RequestValidationError
-from karak.parameters import Inspector
+from karak.parameters import inspect_handler
 from karak.parameters import ParameterSource
 from karak.request import Request
 from karak.response import Response
@@ -38,7 +38,7 @@ class Route(BaseRoute):
         self._methods = methods or ["GET"]
         self._path_regex = compile_path(self._path)
         self._path_parameter_names = set(PARAM_RE.findall(self._path))
-        self._handler_params = Inspector.inspect(
+        self._handler_params = inspect_handler(
             self._handler,
             self._path_parameter_names,
         )

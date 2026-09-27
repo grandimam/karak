@@ -7,7 +7,7 @@ from enum import IntEnum
 from typing import Literal
 from uuid import UUID
 
-from karak.parameters import Inspector
+from karak.parameters import inspect_handler
 from karak.application import Karak
 from tests.test_route_validation import make_request
 
@@ -122,4 +122,4 @@ class ParameterTypeTests(unittest.TestCase):
 
                 handler.__annotations__ = {"value": annotation}
                 with self.assertRaises(TypeError):
-                    Inspector.inspect(handler, path_names)
+                    inspect_handler(handler, path_names)

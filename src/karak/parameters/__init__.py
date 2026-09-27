@@ -1,4 +1,4 @@
-from karak.parameters.inspection import Inspector
 from karak.parameters.inspection import ParameterSource
+from karak.parameters.inspection import inspect_handler
 
-__all__ = ["Inspector", "ParameterSource"]
+__all__ = ["ParameterSource", "inspect_handler"]

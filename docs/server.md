@@ -21,7 +21,7 @@ ASGI server
     → ASGI send
 ```
 
-During registration, `Inspector` reads the handler signature and annotations,
+During registration, `inspect_handler` reads the handler signature and annotations,
 checks path placeholders, and selects converters. During a request, `Router`
 checks the registered routes in order. The matching `Route` builds the handler
 arguments from path and query values, awaits the handler, and sends its result

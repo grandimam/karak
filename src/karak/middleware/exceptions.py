@@ -11,7 +11,7 @@ from karak.types import Send
 logger = logging.getLogger("karak.errors")
 
 
-class ExceptionHandler:
+class ExceptionMiddleware:
     def __init__(self, app: KarakApp) -> None:
         self._app = app
 
