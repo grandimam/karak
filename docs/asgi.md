@@ -43,13 +43,13 @@ async def accepted():
     return Response(status_code=202, content="Accepted")
 
 
-app = Karak(routes=router.routes)
+app = Karak(routes=[router])
 ```
 
 Run it with `uv run uvicorn example:app --reload`.
 
 Define endpoints with `@router.get(path)` or `@router.post(path)`, then construct
-`Karak(routes=router.routes)`. The decorator selects the HTTP method. The app
+`Karak(routes=[router])`. The decorator selects the HTTP method. The app
 copies the supplied routes, so declare endpoints before constructing it.
 
 ## Path and query parameters

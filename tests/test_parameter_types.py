@@ -9,6 +9,7 @@ from uuid import UUID
 
 from karak.parameters import inspect_handler
 from karak.application import Karak
+from karak import Router
 from tests.test_route_validation import make_request
 
 
@@ -24,7 +25,7 @@ class Priority(IntEnum):
 
 class ParameterTypeTests(unittest.TestCase):
     def request_value(self, annotation, query):
-        app = Karak()
+        router = Router()
         received = []
 
         async def handler(value):
@@ -32,7 +33,8 @@ class ParameterTypeTests(unittest.TestCase):
             return "ok"
 
         handler.__annotations__ = {"value": annotation}
-        app.get(path="/values", methods=["GET"])(handler)
+        router.get("/values")(handler)
+        app = Karak(routes=[router])
         return make_request(app, "/values", query), received
 
     def test_supported_values_reach_handler_with_expected_types(self):
@@ -92,15 +94,16 @@ class ParameterTypeTests(unittest.TestCase):
                 self.assertEqual(received, [])
 
     def test_uuid_path_and_list_default(self):
-        app = Karak()
+        router = Router()
         received = []
 
-        @app.get(path="/values/{identifier}", methods=["GET"])
+        @router.get("/values/{identifier}")
         async def handler(identifier: UUID, values: list[int] = [10]):
             received.append((identifier, values))
             return "ok"
 
         identifier = UUID("12345678-1234-5678-1234-567812345678")
+        app = Karak(routes=[router])
         messages = make_request(app, f"/values/{identifier}")
         self.assertEqual(messages[0]["status"], 200)
         self.assertEqual(received, [(identifier, [10])])

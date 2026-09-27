@@ -68,7 +68,7 @@ async def create_user(name: str):
 After defining your endpoints, pass the router's routes into the application:
 
 ```python
-app = Karak(routes=router.routes)
+app = Karak(routes=[router])
 ```
 
 The application copies that list during initialization. Finish decorating your

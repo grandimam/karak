@@ -1,6 +1,7 @@
-from abc import ABC
-from abc import abstractmethod
+from __future__ import annotations
+
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 from karak.exceptions import RequestValidationError
@@ -16,16 +17,14 @@ from karak.types import Scope
 from karak.types import Send
 
 
-class BaseRoute(ABC):
-    @abstractmethod
-    def match(self, scope: Scope, receive: Receive) -> Match:
-        raise NotImplementedError
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        raise NotImplementedError
+@dataclass(slots=True)
+class RouteDefinition:
+    path: str
+    method: str
+    handler: Callable[..., Any]
 
 
-class Route(BaseRoute):
+class Route:
     def __init__(
         self,
         path: str,
@@ -33,6 +32,8 @@ class Route(BaseRoute):
         methods: list[str] | None,
         handler: Callable[..., Any],
     ):
+        if path and not path.startswith("/"):
+            raise ValueError("Route paths must be empty or start with '/'")
         self._path = path
         self._handler = handler
         self._methods = methods or ["GET"]

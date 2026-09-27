@@ -108,7 +108,7 @@ async def get_user(user_id: int, active: bool = True):
     return f"User {user_id} · active={active}"
 
 
-app = Karak(routes=router.routes)
+app = Karak(routes=[router])
 ```
 
 `user_id` comes from the path. `active` comes from the query string and defaults
@@ -139,7 +139,7 @@ Use Python annotations to describe the values your endpoint accepts. Named path
 parameters come from the URL path; other parameters come from the query string.
 Python defaults apply when a query parameter is omitted.
 
-Add this route above `app = Karak(routes=router.routes)` in `example.py` to
+Add this route above `app = Karak(routes=[router])` in `example.py` to
 combine repeated query values with a restricted set of choices:
 
 ```python

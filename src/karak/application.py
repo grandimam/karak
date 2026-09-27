@@ -1,29 +1,53 @@
 from __future__ import annotations
 
-from typing import Callable
-
 from karak.types import Scope
 from karak.types import Receive
 from karak.types import Send
 
-from karak.routing import BaseRoute
+from karak.response import Response
+from karak.routing import BaseRouter
+from karak.routing import Match
+from karak.routing import Route
 from karak.routing import Router
 from karak.middleware import ExceptionMiddleware
 
 
 class Karak:
-    def __init__(self, *, routes: list[BaseRoute] | None = None) -> None:
-        if not routes:
-            routes = []
-        self._router = Router(routes=routes)
-        self._app = ExceptionMiddleware(self._router)
+    def __init__(
+        self,
+        *,
+        routes: list[BaseRouter] | None = None,
+    ) -> None:
+        self._routes = [
+            Route(
+                definition.path,
+                methods=[definition.method],
+                handler=definition.handler,
+            )
+            for definition in Router(routes=routes).flatten()
+        ]
+        self._app = ExceptionMiddleware(self._dispatch)
 
-    def get(self, *, path: str, methods: list[str]):
-        def wrap(func: Callable):
-            self._router.add_route(path=path, methods=methods, handler=func)
-            return func
+    async def _dispatch(
+        self,
+        scope: Scope,
+        receive: Receive,
+        send: Send,
+    ) -> None:
+        partial_match = False
+        for route in self._routes:
+            match = route.match(scope, receive)
+            if match == Match.PARTIAL:
+                partial_match = True
+            if match == Match.FULL:
+                await route(scope, receive, send)
+                return
 
-        return wrap
+        if partial_match:
+            response = Response(status_code=405, content="Method Not Allowed")
+        else:
+            response = Response(status_code=500, content="Route Not Found")
+        await response(scope, receive, send)
 
     async def _lifespan(
         self,
