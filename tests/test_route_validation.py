@@ -1,7 +1,7 @@
 import asyncio
 import unittest
 
-from karak.server import Karak
+from karak.application import Karak
 
 
 def make_request(app, path: str, query_string: bytes = b""):

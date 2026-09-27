@@ -7,8 +7,8 @@ from enum import IntEnum
 from typing import Literal
 from uuid import UUID
 
-from karak.utils import Inspector
-from karak.server import Karak
+from karak.parameters import Inspector
+from karak.application import Karak
 from tests.test_route_validation import make_request
 
 

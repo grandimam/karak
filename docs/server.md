@@ -1,7 +1,7 @@
 # ASGI request handling
 
 The main application is `Karak`, exported by `karak` and implemented in
-[`src/karak/server.py`](../src/karak/server.py). An ASGI server such as Uvicorn
+[`src/karak/application.py`](../src/karak/application.py). An ASGI server such as Uvicorn
 owns the network connections and calls the application with `scope`, `receive`,
 and `send`.
 

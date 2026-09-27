@@ -148,15 +148,31 @@ uv run python -m unittest discover -s tests
 ## Repository layout
 
 ```text
-src/karak/                  # Main ASGI implementation
-examples/basic.py           # Runnable ASGI demo
-examples/exploration.py     # Exploratory demo and development notes
+src/karak/
+├── __init__.py             # Public exports
+├── application.py         # Karak and ASGI lifecycle
+├── request.py             # Request wrapper
+├── response.py            # Response serialization
+├── routing/
+│   ├── __init__.py
+│   ├── routes.py          # Route definitions and dispatch
+│   ├── router.py          # Route selection
+│   └── matching.py        # Path patterns and match results
+├── parameters/
+│   ├── __init__.py
+│   ├── inspection.py      # Handler signatures and parameter validation
+│   └── conversion.py      # Supported type converters
+├── middleware/
+│   ├── __init__.py
+│   └── exceptions.py      # Request error handling
+├── exceptions.py          # Framework exception types
+├── types.py               # ASGI type aliases
+└── py.typed
 tests/                     # ASGI routing and validation tests
-docs/                      # Design proposals and load-testing guide
-notes/                     # Development notes
+docs/                      # Guides, design proposals, and documentation site
 ```
 
-Run the included demo with `uv run uvicorn examples.basic:app --reload`.
+Run the quick-start application with `uv run uvicorn example:app --reload`.
 
 ## License
 
