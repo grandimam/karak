@@ -55,7 +55,7 @@ other supported types.
 Use `@router.get(path)` for GET endpoints and `@router.post(path)` for POST
 endpoints. The decorator selects the HTTP method; there is no `methods=`
 argument. Other method decorators and automatic JSON request-body handling are
-still planned.
+not supported.
 
 ```python
 @router.post("/users")

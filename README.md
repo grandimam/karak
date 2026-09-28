@@ -237,8 +237,8 @@ lifecycle, and operational models.
 
 | Area | Today | Direction |
 | :--- | :--- | :--- |
-| **HTTP** | ASGI, router decorators, typed inputs, validation, text and bytes | JSON, shared dependencies, generated API documentation |
-| **Application lifecycle** | Startup and shutdown acknowledgements | Resource setup, cleanup, and graceful shutdown |
+| **HTTP** | ASGI, router decorators, typed inputs, validation, text and bytes, shared resource handles | JSON, generated API documentation |
+| **Application lifecycle** | Typed resource dependencies, automatic setup and cleanup, optional `lifespan=` hook | Graceful shutdown coordination |
 | **Persistence** | Planned | Database resources, explicit transactions, and migrations within the application model |
 | **Background work** | Planned | A path from simple execution to durable distributed jobs, retries, and failure recovery |
 | **Recurring work** | Planned | Scheduling with defined behavior for missed and overlapping runs |
@@ -253,6 +253,7 @@ lifecycle, and operational models.
 | :--- | :--- |
 | Learn the framework | [Documentation](docs/README.md) |
 | Add endpoints and accept input | [Routing](docs/content/routing.md) · [Parameters](docs/content/parameters.md) |
+| Share services and manage their dependencies | [Application resources](docs/content/resources.md) |
 | Understand the current implementation | [ASGI guide](docs/asgi.md) · [Request handling](docs/server.md) |
 | Measure a local application | [Load testing](docs/load-testing.md) |
 | Work on the documentation site | [Website development](docs/website.md) |

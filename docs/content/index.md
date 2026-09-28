@@ -1,22 +1,19 @@
 ---
 title: Quickstart
-description: Start learning Karak with its HTTP foundation—the first step toward one integrated Python backend system.
+description: Install Karak, write an async endpoint, and run your first Python HTTP application.
 ---
 
 <header class="docs-opening">
   <div class="opening-copy">
-    <h1 id="start-with-a-little-python">Python backends.<br>One coherent system.</h1>
-    <p class="lead">Integrated, not assembled. Learn the fundamentals. Learn Karak deeply. Build and operate serious Python backends.</p>
+    <h1 id="start-with-a-little-python">Build your first<br>Karak application.</h1>
+    <p class="lead">Write an endpoint, start the server, and make a request.</p>
     <p class="page-status">Experimental · Python 3.13+</p>
   </div>
   <img class="opening-sphere" src="assets/share-card-sphere.png" width="1734" height="907" alt="" fetchpriority="high">
 </header>
 
-Karak's thesis is that [Python backend development should be integrated, not
-assembled](introduction.md). The goal is one system to learn deeply across
-HTTP, persistence, background work, scheduling, observability, and operation.
-This guide starts with the HTTP foundation available today. Karak is
-experimental; the broader production system is planned.
+This guide takes you from a repository checkout to a running HTTP endpoint.
+Karak is experimental; use these examples for local development and evaluation.
 
 ## Install
 
@@ -73,7 +70,7 @@ Press **Ctrl+C** in the terminal when you want to stop it.
 ## What next?
 
 [Add another endpoint](routing.md), then [accept values from a request](parameters.md).
-For the shared programming, configuration, lifecycle, and operational models
-we are building toward, read [the thesis and direction](design.md).
+Learn to [send responses](responses.md) and
+[share services across requests](resources.md) as your application grows.
 
 [Define routes →](routing.md){: .next-link }

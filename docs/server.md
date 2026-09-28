@@ -64,9 +64,13 @@ handlers in the current ASGI implementation.
 `http.response.body`. Ordinary text results are encoded as UTF-8; bytes can be
 returned directly. The default status is 200.
 
-For lifespan scopes, the application acknowledges `lifespan.startup` and
-`lifespan.shutdown`. User-defined startup and shutdown callbacks remain future
-work for the ASGI implementation.
+For lifespan scopes, the application enters the optional `lifespan=` async context
+manager before acknowledging startup and exits it before acknowledging shutdown.
+Setup and cleanup errors send ASGI lifespan failure messages. Registered resources
+initialize before the hook and clean up after it. Resource factory parameters
+annotated with `ResourceContext[T]` receive wrappers around resolved dependencies.
+Karak carries the resource session through ASGI lifespan state and binds it while
+serving each request, allowing handle `.get()` calls to select the correct instance.
 
 The [original server notes](../notes/server.md) preserve the earlier design
 exploration, including proposed APIs.

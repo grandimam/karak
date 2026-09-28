@@ -30,16 +30,16 @@ source files; GitHub Actions builds and uploads the output.
 
 ## Editorial direction
 
-Lead product framing with the thesis: **Python backend development should be
-integrated, not assembled.** Explain how knowledge of Karak carries across
-HTTP, persistence, background work, scheduling, observability, and operation
-through one programming model, configuration model, lifecycle, and operational
-model. Teach backend fundamentals and make guarantees explicit.
+The website has one [mission page](content/design.md). Keep the thesis, product
+direction, and planned capabilities there. Every other published page should help
+users build with Karak today: provide working examples, commands, expected
+results, and useful explanations of errors and limits.
 
-Keep practical guides focused on working features. Label planned capabilities,
-and use background work as an example of the broader thesis. The
-[thesis and direction](content/design.md) is the product reference; the
-[architecture proposal](design.md) gives contributor design criteria.
+Lead the homepage with the quickstart. Organize navigation by tasks such as
+defining routes, accepting inputs, and sharing resources. Avoid repeating mission
+language in guide introductions, metadata, or the shared theme. The separate
+[architecture proposal](design.md) remains a contributor reference outside the
+published website.
 
 ## Editing
 

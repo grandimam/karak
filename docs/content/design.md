@@ -1,9 +1,9 @@
 ---
-title: Thesis and direction
+title: Mission
 description: Python backend development should be integrated, not assembled. Karak's thesis and path toward one coherent production backend system.
 ---
 
-# One coherent system to learn deeply.
+# Our mission: one coherent Python backend system.
 
 <p class="lead">Learn the fundamentals. Learn Karak deeply. Build and operate serious Python backends.</p>
 
@@ -25,7 +25,7 @@ and tooling complexity around those fundamentals.
 
 **This is the direction, not today's feature set.** Karak currently provides
 an experimental HTTP foundation with async endpoints, typed URL inputs,
-validation, and text or byte responses. The broader capabilities below are
+validation, text or byte responses, and shared application resources. The broader capabilities below are
 planned, and Karak is not production-ready.
 
 ## Built for engineers who understand their systems
@@ -68,7 +68,7 @@ direction, not a release calendar.
 
 | Area | Intended experience | Today |
 | --- | --- | --- |
-| HTTP | Define endpoints, validate input, return structured responses, and share services | Async endpoints, typed path and query inputs, validation, text and bytes |
+| HTTP | Define endpoints, validate input, return structured responses, and share services | Async endpoints, typed path and query inputs, validation, text and bytes, application resources |
 | Persistence | Manage database resources, transactions, and schema migrations within Karak's application model | Planned |
 | Background work | Grow from simple background execution to durable distributed work using the same concepts | Planned |
 | Scheduling | Schedule the same work with explicit behavior for missed runs, overlaps, and time zones | Planned |

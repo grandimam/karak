@@ -1,5 +1,5 @@
 site_name: Karak
-site_description: Python backend development should be integrated, not assembled. Learn the fundamentals. Learn Karak deeply. One coherent system to build and operate Python backends.
+site_description: Build Python HTTP applications with Karak. Run your first endpoint, validate inputs, share application resources, and send responses.
 site_url: https://karak.dev/
 repo_url: https://github.com/grandimam/karak
 docs_dir: content
@@ -21,13 +21,14 @@ markdown_extensions:
       permalink: false
 nav:
   - Getting started:
-      - Introduction: introduction.md
       - Quickstart: index.md
       - Installation: installation.md
+      - How Karak works: introduction.md
   - Using Karak:
       - Run an application: application.md
       - Define routes: routing.md
       - Read request values: parameters.md
       - Send responses: responses.md
-  - Looking ahead:
-      - Thesis and direction: design.md
+      - Share application resources: resources.md
+  - About:
+      - Mission: design.md

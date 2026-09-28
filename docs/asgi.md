@@ -102,9 +102,12 @@ exceptions are logged through `karak.errors` and produce HTTP 500 with
 
 ## Current boundaries
 
-The application acknowledges ASGI startup and shutdown events. It does not yet
-provide user-defined lifecycle hooks. Dependency injection, automatic request
-body binding, injected `Request` parameters, WebSockets, and a synchronous
+The application accepts a `lifespan=` async context manager for startup and
+shutdown. Register `@resource` factories through `resources=[...]`; resource
+factories declare dependencies with `ResourceContext[T]` and access their values
+through `.value`. Handlers access initialized resources through `.get()` on a
+resource handle. See [application resources](content/resources.md).
+Automatic request body binding, injected `Request` parameters, WebSockets, and a synchronous
 handler executor are also not implemented.
 
 Routing remains a prototype: an unmatched path currently returns HTTP 500.

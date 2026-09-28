@@ -25,6 +25,55 @@ async def index():
 app = Karak(router=router)
 ```
 
+## Share services and clients
+
+Use `@resource` factories and `Karak(resources=[...])` for objects shared across
+requests. Karak initializes their dependencies before serving requests and runs
+generator cleanup at shutdown. Start with the complete example in
+[share application resources](resources.md).
+
+## Add startup and shutdown work
+
+Pass an async context manager as `lifespan=` when you need application-specific
+setup or cleanup beyond registered resource factories:
+
+```python
+from contextlib import asynccontextmanager
+
+from karak import Karak
+from karak import Router
+
+router = Router()
+
+
+@asynccontextmanager
+async def lifespan():
+    print("Application starting")
+    try:
+        yield
+    finally:
+        print("Application stopping")
+
+
+@router.get("/")
+async def index():
+    return "Hello from Karak"
+
+
+app = Karak(router=router, lifespan=lifespan)
+```
+
+Karak enters this context manager before acknowledging startup and exits it
+before acknowledging shutdown. If you also register resources, they initialize
+before the hook enters and remain available until after it exits. The hook can
+access their handles through `.get()`; Karak does not use its yielded value.
+
+Keep ASGI lifespan enabled when running hooks or resources. Startup errors stop
+initialization and release resources already acquired. Cleanup errors are
+reported to the server. The server is responsible for finishing active requests
+before sending shutdown. Without resources or a hook, Karak simply acknowledges
+the server's startup and shutdown events.
+
 ## Start the development server
 
 From the directory containing `main.py`, run:
@@ -73,8 +122,7 @@ cause. See [send responses](responses.md#understand-error-responses) for more.
 Karak is currently for local experimentation and development. The framework
 is not production-ready, and `--reload` is a development convenience.
 
-The intended [operational model](design.md) spans HTTP, persistence, background
-work, and schedules with consistent configuration, resource ownership,
-inspection, and shutdown. Today's explicit Uvicorn command is how you run the
-HTTP foundation while that integrated experience is being built. There is no
-Karak deployment command or managed background-job system to use yet.
+For local development, run the Uvicorn command above. Do not use `--reload`
+when evaluating behavior across a long-running process: each reload creates a
+new application lifespan and new resource instances. Configure and manage the
+ASGI server yourself; Karak does not include a deployment command.

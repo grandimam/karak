@@ -62,8 +62,7 @@ content and an explicit 204 status.
 ## Can I return JSON?
 
 Automatic JSON responses, custom headers, and streaming are not available in
-the main framework yet. Use text or bytes for the current examples. JSON
-request and response support is part of [the plan](design.md).
+the main framework yet. Use text or bytes for the current examples.
 
 ## Understand error responses
 

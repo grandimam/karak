@@ -35,8 +35,10 @@ system, rather than the test of the product thesis.
 | One lifecycle | Define who owns resources, when they are acquired and released, and how startup, cancellation, failure, and shutdown behave. |
 | One operational model | Provide consistent ways to run, inspect, diagnose, deploy, and recover requests, jobs, and schedules. |
 
-These are commitments for the planned system. Current lifespan handling only
-acknowledges startup and shutdown; it does not implement resource management.
+These are commitments for the planned system. Current lifespan handling accepts
+an application-defined async context manager for setup and cleanup. Registered
+resource factories support typed dependencies and application-scoped sharing;
+request connections and transactions remain the application's responsibility.
 
 Integration does not require implementing every underlying component ourselves.
 ASGI servers, database drivers, and other infrastructure can sit behind explicit

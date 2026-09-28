@@ -1,59 +1,84 @@
 ---
-title: Introduction
-description: Learn the fundamentals. Learn Karak deeply. One coherent system for Python backend engineering.
+title: How Karak works
+description: Understand routers, handlers, application resources, and the server that runs your code.
 ---
 
-# Python backend development should be integrated, not assembled.
+# The pieces of a Karak application.
 
-<p class="lead">Karak is being built to give Python backend engineers one coherent system to learn deeply, build with, and operate.</p>
+<p class="lead">Connect a URL to a Python function, then let an ASGI server run your application.</p>
 
-Building a production Python backend often means assembling a framework,
-server, task queue, broker, scheduler, migration tools, observability, and
-deployment tooling. Each adds its own abstractions and operational model.
-Karak aims to absorb that integration complexity so knowledge of one system
-carries across the application.
+If you have not run an endpoint yet, start with the [quickstart](index.md).
+You need Python 3.13 or newer. The repository's development environment includes
+Uvicorn, the server used throughout these guides.
 
-## Built for engineers
+## Define handlers on a router
 
-Learn Python. Understand HTTP, databases, transactions, concurrency,
-reliability, and distributed systems. Learn Karak deeply and apply those
-fundamentals to serious backends.
+A handler is an async function that processes a request and returns a response.
+Decorators register its URL and HTTP method:
 
-That is the ambition behind “Karak engineer.” You should understand how your
-application behaves, including how it fails. You should also have the comfort
-of working within a system whose configuration, lifecycle, and operations are
-consistent as your application grows.
+```python
+from karak import Karak
+from karak import Router
 
-## One system, progressively more of the backend
+router = Router()
 
-**HTTP → persistence → background work → scheduling → observability → operation**
 
-Karak should extend one programming model, one configuration model, one
-lifecycle, and one operational model across these capabilities. For example,
-moving from a simple background task to durable distributed work should build
-on the Karak model you already know. Reliability requirements become more
-explicit as work grows; the surrounding toolchain should not need to be
-relearned at each stage.
+@router.get("/users/{user_id}")
+async def user(user_id: int, active: bool = True):
+    return f"User {user_id} · active={active}"
 
-Read [the thesis and direction](design.md) for what this means in practice.
 
-## What can I use today?
+app = Karak(router=router)
+```
 
-Today Karak provides an experimental HTTP foundation: async endpoints, typed
-path and query values, validation, and text or byte responses. It runs on
-standard Python 3.13+ with an external ASGI server such as Uvicorn.
+`Router` collects declarations. `Karak` reads those declarations and validates
+handler signatures when you construct the application. Finish declaring routes
+before calling `Karak(...)`. See [define routes](routing.md).
 
-Karak is not ready for production use. Integrated persistence, background
-execution, durable jobs, scheduling, observability, and production operation
-are planned. These guides teach the working HTTP foundation and label future
-capabilities separately.
+## Follow a request
 
-## Start with the HTTP foundation
+When a client requests `/users/42?active=false`:
 
-1. [Run your first endpoint](index.md).
-2. [Add URLs to your application](routing.md).
-3. [Accept and validate request values](parameters.md).
-4. [Choose what to send back](responses.md).
+1. The server delivers the HTTP request to Karak.
+2. Karak matches the URL and method to `user`.
+3. The handler's annotations convert `42` into an integer and `false` into a boolean.
+4. Karak awaits `user(user_id=42, active=False)`.
+5. The returned string becomes the response body: `User 42 · active=False`.
 
-If you need help setting up your environment, begin with
-[installation](installation.md).
+Invalid or missing required values produce HTTP 422 before the handler runs.
+Read [request values](parameters.md) for supported types and
+[responses](responses.md) for status codes and errors.
+
+## Share application services
+
+Use `@resource` to declare a factory and register the handle with
+`Karak(router=router, resources=[...])`. Karak initializes resources at startup
+and makes them available to handlers through the handle's `.get()` method.
+
+A factory parameter such as `pool: ResourceContext[DatabasePool]` asks Karak
+to supply an already-initialized dependency. Access it through `pool.value`.
+These annotations belong on resource factories, not endpoint parameters.
+
+The [resource guide](resources.md) gives a complete example and explains cleanup,
+dependency ordering, and application lifetimes.
+
+## Run the application
+
+Save the first example as `main.py`, then run:
+
+```sh
+uv run uvicorn main:app --reload
+```
+
+Uvicorn owns the listening socket and sends requests and startup/shutdown events
+to Karak. Karak owns routing, input conversion, and registered resource lifetimes.
+Your code owns business operations and their transaction boundaries.
+
+See [run an application](application.md) for editing, ports, and startup hooks.
+
+## Check the current boundaries
+
+Karak supports async GET and POST handlers, typed path and query parameters,
+text and byte responses, static files, and application resources. JSON body
+binding, automatic JSON responses, and synchronous handlers are not supported.
+Karak is experimental and is not ready for production use.

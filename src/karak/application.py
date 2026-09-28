@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager
+from contextlib import nullcontext
+from typing import Any
 
 from karak.types import Scope
 from karak.types import Receive
@@ -12,6 +16,9 @@ from karak.routing import Match
 from karak.routing import Route
 from karak.routing.staticfiles import StaticFiles
 from karak.middleware import ExceptionMiddleware
+from karak.resources import Resource
+from karak.resources import RESOURCE_STATE_KEY
+from karak.resources import _ResourceRegistry
 
 
 class Karak:
@@ -20,7 +27,11 @@ class Karak:
         *,
         router: Router,
         static_dir: str | Path | None = None,
+        lifespan: Callable[[], AbstractAsyncContextManager[None]] | None = None,
+        resources: list[Resource[Any]] | None = None,
     ) -> None:
+        self._lifespan_factory = lifespan
+        self._resources = _ResourceRegistry(resources or [])
         self._static_files = StaticFiles(static_dir) if static_dir else None
         self._routes = [
             Route(
@@ -63,13 +74,25 @@ class Karak:
         receive: Receive,
         send: Send,
     ) -> None:
-        while True:
-            message = await receive()
-            if message["type"] == "lifespan.startup":
-                await send({"type": "lifespan.startup.complete"})
-            elif message["type"] == "lifespan.shutdown":
-                await send({"type": "lifespan.shutdown.complete"})
-                return
+        message = await receive()
+        if message["type"] != "lifespan.startup":
+            raise RuntimeError("Expected lifespan.startup")
+
+        phase = "startup"
+        try:
+            async with self._resources.lifespan() as session:
+                scope.setdefault("state", {})[RESOURCE_STATE_KEY] = session
+                manager = self._lifespan_factory() if self._lifespan_factory else nullcontext()
+                async with manager:
+                    await send({"type": "lifespan.startup.complete"})
+                    phase = "shutdown"
+                    message = await receive()
+                    if message["type"] != "lifespan.shutdown":
+                        raise RuntimeError("Expected lifespan.shutdown")
+        except Exception as exc:
+            await send({"type": f"lifespan.{phase}.failed", "message": str(exc)})
+            return
+        await send({"type": "lifespan.shutdown.complete"})
 
     async def _http(
         self,
@@ -77,7 +100,9 @@ class Karak:
         receive: Receive,
         send: Send,
     ) -> None:
-        await self._app(scope, receive, send)
+        session = scope.get("state", {}).get(RESOURCE_STATE_KEY)
+        with self._resources.bind(session):
+            await self._app(scope, receive, send)
 
     async def __call__(
         self,

@@ -1,32 +1,27 @@
 # Karak documentation
 
-**Python backend development should be integrated, not assembled.** Karak is
-being built as one coherent system for engineers who know Python and backend
-fundamentals and want to learn one system deeply.
-
-The direction spans HTTP, persistence, background work, scheduling,
-observability, and operation, with one programming model, one configuration
-model, one lifecycle, and one operational model. Today Karak is experimental
-and provides the HTTP foundation. The practical guides describe that working
-foundation; the broader production experience is planned.
+Build an HTTP application with async routes, typed inputs, responses, and shared
+application resources. Start with a working example, then add the capabilities
+your application needs. Karak is experimental and requires Python 3.13+.
 
 ## Get started
 
 | I want to… | Read |
 | --- | --- |
-| Understand what Karak is for | [Introduction](content/introduction.md) |
+| Understand routers, handlers, and resources | [How Karak works](content/introduction.md) |
 | See my first endpoint respond | [Quickstart](content/index.md) |
 | Set up my environment | [Installation](content/installation.md) |
 | Start, edit, and stop my app | [Run an application](content/application.md) |
 | Add an endpoint | [Define routes](content/routing.md) |
 | Accept filters, page numbers, and other input | [Read request values](content/parameters.md) |
 | Return a message or a status code | [Send responses](content/responses.md) |
+| Share a service or client across requests | [Application resources](content/resources.md) |
 
-## Look ahead
+## Mission
 
-[Thesis and direction](content/design.md) explains the integrated backend
-experience and the path from simple background execution to durable distributed
-work within one mental model. It distinguishes current capabilities from plans.
+[Mission](content/design.md) is the site's one page about Karak's goals and
+future direction. All other website pages explain how to build with the
+features available today.
 
 ## Work on Karak
 
