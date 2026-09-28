@@ -8,8 +8,8 @@ description: Give your application endpoints and read values from their URLs.
 <p class="lead">Choose the URL someone visits and the function that answers it.</p>
 
 A route connects a URL to your code. In the [quickstart](index.md), `/` returned
-a greeting. Define endpoints on your `router`, then pass `router.routes` into
-`Karak` when constructing the application. Add this before that constructor:
+a greeting. Define endpoints on your `router`, then pass it in the application's
+`routes` list. Add this before constructing `Karak(routes=[router])`:
 
 ```python
 @router.get("/users/{user_id}")
@@ -65,39 +65,68 @@ async def create_user(name: str):
 
 ## Construct the application
 
-After defining your endpoints, pass the router's routes into the application:
+After defining your endpoints, pass the router into the application:
 
 ```python
 app = Karak(routes=[router])
 ```
 
-The application copies that list during initialization. Finish decorating your
-router before constructing the app. There is no routing compilation or freeze
-step at startup, and the router remains editable. Later additions to the
-original router are not added to an already constructed application's copy.
+`Router` and `Mount` both implement `BaseRouter.flatten(prefix="")`. This method
+produces endpoint definitions with complete paths. `Karak` uses those definitions
+to create executable routes and validate handler signatures during initialization.
+The application then matches those routes directly when serving requests.
 
-## Mount declarations
+Finish decorating your routers before constructing the app. Routers remain
+editable, but later additions are only included when a new application is
+constructed. There is no separate startup compilation or freezing step.
 
-`Mount` currently holds a path prefix and a child router:
+## Mount a router
+
+Use `Mount` to give a router a shared prefix. Mounts can wrap any `BaseRouter`,
+including another mount. Prefixes and endpoint paths can both contain parameters:
 
 ```python
+from karak import Karak
 from karak import Mount
 from karak import Router
 
-users = Router()
-api = Router(routes=[Mount(path="/users", router=users)])
+posts = Router()
+
+
+@posts.get("/{post_id}")
+async def post(user_id: int, post_id: int, preview: bool = False):
+    return f"User {user_id}, post {post_id}, preview={preview}"
+
+
+users = Mount(path="/users/{user_id}/posts", router=posts)
+app = Karak(routes=[Mount(path="/api", router=users)])
 ```
 
-**Mount dispatch is not implemented.** The declaration is available for the
-routing design; nested paths and inherited parameters are not resolved yet.
-Attempting to dispatch through a mount raises `NotImplementedError`.
+`GET /api/users/42/posts/7?preview=true` passes `user_id=42`, `post_id=7`, and
+`preview=True` to `post`. Each handler must declare all parameters inherited
+from its mounts. A query value with the same name cannot override a path value.
+
+To group several routers, pass them in another router's constructor, for example
+`Router(routes=[Mount(path="/users", router=users_router), other_router])`.
+Endpoint decorators on that parent add its own routes after those child groups.
+
+Mounts only carry prefixes and references to children. The complete tree is
+flattened when `Karak` is constructed, so additions made to a child before then
+are included. Reusing a router in different mounts or applications leaves its
+original paths unchanged.
+
+Mount prefixes must start with `/`; a trailing slash is ignored when joining
+them to child paths. Mounting at `/` adds no prefix. Under `/api`, an endpoint
+path of `""` matches `/api`, while `"/"` matches `/api/`. There are no automatic
+slash redirects. Duplicate parameter names in a complete path are rejected
+when the application is constructed.
 
 ## Prototype limitations
 
 Keep these limitations in mind when trying routes:
 
 - Use matching names for path placeholders and function parameters, and
-  annotate every parameter. Mistakes here prevent the endpoint from being added.
+  annotate every parameter. Mistakes here prevent application construction.
 - An unknown URL currently returns HTTP 500 with `Route Not Found`, rather
   than HTTP 404. Check the URL and the routes you have defined.
 - Routes are checked in registration order. Put static paths before overlapping

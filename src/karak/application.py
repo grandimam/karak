@@ -8,7 +8,6 @@ from karak.response import Response
 from karak.routing import BaseRouter
 from karak.routing import Match
 from karak.routing import Route
-from karak.routing import Router
 from karak.middleware import ExceptionMiddleware
 
 
@@ -24,7 +23,8 @@ class Karak:
                 methods=[definition.method],
                 handler=definition.handler,
             )
-            for definition in Router(routes=routes).flatten()
+            for router in routes or []
+            for definition in router.flatten()
         ]
         self._app = ExceptionMiddleware(self._dispatch)
 

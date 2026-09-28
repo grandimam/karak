@@ -7,7 +7,6 @@ from enum import IntEnum
 from typing import Literal
 from uuid import UUID
 
-from karak.parameters import inspect_handler
 from karak.application import Karak
 from karak import Router
 from tests.test_route_validation import make_request
@@ -108,7 +107,7 @@ class ParameterTypeTests(unittest.TestCase):
         self.assertEqual(messages[0]["status"], 200)
         self.assertEqual(received, [(identifier, [10])])
 
-    def test_unsupported_annotations_fail_at_registration(self):
+    def test_unsupported_annotations_fail_at_app_initialization(self):
         for annotation, path_names in [
             (list[int], {"value"}),
             (list, set()),
@@ -124,5 +123,8 @@ class ParameterTypeTests(unittest.TestCase):
                     pass
 
                 handler.__annotations__ = {"value": annotation}
+                router = Router()
+                path = "/values/{value}" if path_names else "/values"
+                router.get(path)(handler)
                 with self.assertRaises(TypeError):
-                    inspect_handler(handler, path_names)
+                    Karak(routes=[router])

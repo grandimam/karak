@@ -36,7 +36,6 @@ class RouteValidationTests(unittest.TestCase):
             ValueError,
             "Path parameters missing from handler signature: user_id",
         ):
-
             Karak(routes=[router])
 
     def test_path_and_query_parameters_are_converted(self):

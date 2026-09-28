@@ -52,10 +52,14 @@ class RouterDecoratorTests(unittest.TestCase):
         async def first():
             return "first"
 
-        self.assertEqual(make_request(Karak(routes=[router]), "/first")[1]["body"], b"first")
+        self.assertEqual(
+            make_request(Karak(routes=[router]), "/first")[1]["body"], b"first"
+        )
 
         @router.get("/later")
         async def later():
             return "later"
 
-        self.assertEqual(make_request(Karak(routes=[router]), "/later")[1]["body"], b"later")
+        self.assertEqual(
+            make_request(Karak(routes=[router]), "/later")[1]["body"], b"later"
+        )

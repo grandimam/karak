@@ -247,7 +247,8 @@ def get_user(user_id: int):
     ...
 ```
 
-The router should compile routes during application startup.
+The application prepares routes during construction, after flattening all
+router and mount definitions into complete paths.
 
 Avoid performing expensive reflection or parsing on every request.
 
@@ -956,19 +957,21 @@ The complete request lifecycle should look approximately like:
 
 The critical optimization principle:
 
-> **Everything that can be moved from request time to startup time should be moved to startup time.**
+> **Prepare routing metadata during application construction so requests can use it directly.**
 
 ---
 
-# 27. Startup Compilation
+# 27. Application Construction
 
 When:
 
 ```python
-app = App()
+app = Karak(routes=[router])
 ```
 
-is created, the framework should eventually compile the application.
+is created, Karak flattens router definitions and creates executable HTTP
+routes. Each handler is inspected against its complete path. Future dependency
+and serialization metadata could be prepared at this same construction boundary.
 
 Conceptually:
 

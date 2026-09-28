@@ -33,7 +33,9 @@ class MountTests(unittest.TestCase):
         posts = Router()
 
         @posts.get("/{post_id}")
-        async def post(tenant_id: UUID, user_id: int, post_id: int, preview: bool = False):
+        async def post(
+            tenant_id: UUID, user_id: int, post_id: int, preview: bool = False
+        ):
             received.append((tenant_id, user_id, post_id, preview))
             return "post"
 
@@ -74,7 +76,9 @@ class MountTests(unittest.TestCase):
         async def profile():
             return "profile"
 
-        with self.assertRaisesRegex(ValueError, "missing from handler signature: user_id"):
+        with self.assertRaisesRegex(
+            ValueError, "missing from handler signature: user_id"
+        ):
             Karak(routes=[Mount(path="/users/{user_id}", router=missing)])
 
         lists = Router()
@@ -120,10 +124,14 @@ class MountTests(unittest.TestCase):
         self.assertEqual(make_request(app, "/old/later")[1]["body"], b"later")
         self.assertEqual(make_request(app, "/old/new")[1]["body"], b"Route Not Found")
         self.assertEqual(make_request(updated, "/old/new")[1]["body"], b"new")
-        self.assertEqual(make_request(Karak(routes=[child]), "/later")[1]["body"], b"later")
+        self.assertEqual(
+            make_request(Karak(routes=[child]), "/later")[1]["body"], b"later"
+        )
 
     def test_nested_mounts_inspect_handlers_once_with_the_complete_path(self):
-        with patch("karak.routing.routes.inspect_handler", wraps=inspect_handler) as inspect:
+        with patch(
+            "karak.routing.routes.inspect_handler", wraps=inspect_handler
+        ) as inspect:
             posts = Router()
 
             @posts.get("/{post_id}")
@@ -133,13 +141,17 @@ class MountTests(unittest.TestCase):
             users = Mount(path="/users/{user_id}/posts", router=posts)
             api = Mount(path="/api", router=users)
             definitions = list(api.flatten())
-            self.assertEqual(definitions[0].path, "/api/users/{user_id}/posts/{post_id}")
+            self.assertEqual(
+                definitions[0].path, "/api/users/{user_id}/posts/{post_id}"
+            )
             inspect.assert_not_called()
 
             app = Karak(routes=[api])
             inspect.assert_called_once_with(post, {"user_id", "post_id"})
             for _ in range(2):
-                self.assertEqual(make_request(app, "/api/users/42/posts/7")[1]["body"], b"42:7")
+                self.assertEqual(
+                    make_request(app, "/api/users/42/posts/7")[1]["body"], b"42:7"
+                )
             inspect.assert_called_once_with(post, {"user_id", "post_id"})
 
     def test_mount_and_app_accept_the_base_router_contract(self):
@@ -163,10 +175,12 @@ class MountTests(unittest.TestCase):
         async def profile(user_id: int):
             return str(user_id)
 
-        first = Karak(routes=[
-            Mount(path="/v1/users/{user_id}", router=users),
-            Mount(path="/v2/users/{user_id}", router=users),
-        ])
+        first = Karak(
+            routes=[
+                Mount(path="/v1/users/{user_id}", router=users),
+                Mount(path="/v2/users/{user_id}", router=users),
+            ]
+        )
         second = Karak(routes=[Mount(path="/members/{user_id}", router=users)])
 
         for app, path in (
@@ -176,7 +190,10 @@ class MountTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertEqual(make_request(app, path)[1]["body"], b"42")
-        self.assertEqual(make_request(Karak(routes=[users]), "/profile", b"user_id=99")[1]["body"], b"99")
+        self.assertEqual(
+            make_request(Karak(routes=[users]), "/profile", b"user_id=99")[1]["body"],
+            b"99",
+        )
 
     def test_path_joining_handles_root_and_trailing_slashes(self):
         cases = (
@@ -230,11 +247,15 @@ class MountTests(unittest.TestCase):
             return f"profile:{user_id}"
 
         app = Karak(routes=[Mount(path="/users/{user_id}", router=users)])
-        self.assertEqual(make_request(app, "/users/42/profile")[1]["body"], b"profile:42")
+        self.assertEqual(
+            make_request(app, "/users/42/profile")[1]["body"], b"profile:42"
+        )
         created = make_request(app, "/users/42/profile", method="POST")
         self.assertEqual(created[0]["status"], 201)
         self.assertEqual(created[1]["body"], b"created:42")
-        self.assertEqual(make_request(app, "/users/42/profile", method="DELETE")[0]["status"], 405)
+        self.assertEqual(
+            make_request(app, "/users/42/profile", method="DELETE")[0]["status"], 405
+        )
 
     def test_mount_paths_require_a_leading_slash(self):
         for path in ("", "api"):

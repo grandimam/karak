@@ -1,3 +1,4 @@
+from karak.routing.base import BaseRouter
 from karak.routing.matching import Match
 from karak.routing.matching import PARAM_RE
 from karak.routing.matching import compile_path
@@ -16,4 +17,3 @@ __all__ = [
     "Router",
     "compile_path",
 ]
-from karak.routing.base import BaseRouter

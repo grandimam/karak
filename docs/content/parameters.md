@@ -102,4 +102,4 @@ identifies the parameter that needs attention, and your function is not called.
 
 Use supported types for every parameter. Types such as `str | None`, nested
 lists, dictionaries, and body models are not supported in the main framework
-yet. An unsupported annotation prevents the endpoint from being added.
+yet. An unsupported annotation prevents the application from being constructed.

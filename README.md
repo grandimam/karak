@@ -180,7 +180,7 @@ Tags: python, backend · sort=price
 
 Missing required parameters and invalid values produce **HTTP 422** responses.
 Repeated query keys are accepted for lists and rejected for scalar parameters.
-Unsupported annotations are rejected when the route is registered.
+Unsupported annotations are rejected when the application is constructed.
 
 </details>
 
@@ -209,6 +209,16 @@ GET endpoints and `router.post` for POST endpoints. JSON responses are planned.
 
 [Read the response guide →](docs/content/responses.md)
 
+## Group endpoints with mounts
+
+`Router` and `Mount` share the `BaseRouter` interface. Pass them in the
+application's `routes` list to compose endpoint groups and nested prefixes.
+Mounts can include parameters such as `/api/users/{user_id}`; handlers receive
+those parameters alongside values from their own paths. Karak flattens the
+definitions and builds the final routes when the application is constructed.
+
+[See a complete mounted-router example →](docs/content/routing.md#mount-a-router)
+
 ## Where we are
 
 The HTTP foundation is available for experimentation. The rest of the runtime
@@ -217,7 +227,7 @@ replacement goals.
 
 | Area | Today | Direction |
 | :--- | :--- | :--- |
-| **HTTP** | ASGI, router decorators, typed inputs, validation, text and bytes | Mount routing, JSON, shared dependencies, generated API documentation |
+| **HTTP** | ASGI, router decorators, nested mounts, typed inputs, validation, text and bytes | JSON, shared dependencies, generated API documentation |
 | **Application lifecycle** | Startup and shutdown acknowledgements | Resource setup, cleanup, and graceful shutdown |
 | **Background work** | Planned | Database-backed jobs, workers, retries, and failure recovery |
 | **Recurring work** | Planned | Scheduling with defined behavior for missed and overlapping runs |
@@ -263,6 +273,7 @@ src/karak/
 ├── response.py            # Response serialization
 ├── routing/
 │   ├── __init__.py
+│   ├── base.py            # Shared router flattening contract
 │   ├── routes.py          # Route definitions and dispatch
 │   ├── router.py          # Route selection
 │   ├── mount.py           # Router mount declarations

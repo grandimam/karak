@@ -13,22 +13,28 @@ It is not the application class.
 ```text
 ASGI server
     → Karak.__call__
-    → ExceptionHandler
-    → Router
+    → ExceptionMiddleware
+    → Karak._dispatch
     → Route: parameter conversion and validation
     → async handler
     → Response
     → ASGI send
 ```
 
-Router decorators register each endpoint. `inspect_handler` reads its signature
-and annotations, checks path placeholders, and selects converters. The
-application receives a copy of `router.routes` during initialization.
+Router decorators store endpoint definitions: path, method, and handler.
+`Router` and `Mount` implement the shared `BaseRouter.flatten(prefix="")`
+contract. A router yields its definitions and child groups; a mount adds its
+prefix and delegates to its child.
 
-During a request, `Router` checks its routes in order. The matching `Route`
+During application construction, `Karak` consumes the flattened definitions
+and creates each `Route` once, using its complete path. `inspect_handler` then
+reads the handler signature, validates all path placeholders, and selects
+converters. The original definitions remain reusable and editable.
+
+During a request, `Karak._dispatch` checks its routes in order. The matching `Route`
 builds handler arguments from path and query values, awaits the handler, and
-sends its result through a `Response`. There is no routing compilation or
-freezing stage. `Mount` is a declaration only; mount dispatch remains unfinished.
+sends its result through a `Response`. No flattening or handler inspection
+runs during requests or lifespan startup.
 
 See the [ASGI guide](asgi.md) for runnable examples and routing limitations.
 
