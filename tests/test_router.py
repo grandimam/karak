@@ -11,6 +11,92 @@ from tests.test_route_validation import make_request
 
 
 class RouterDecoratorTests(unittest.TestCase):
+    def test_included_routers_dispatch_in_registration_order(self):
+        users = Router()
+        orders = Router()
+        router = Router()
+
+        @router.get("/users/me")
+        async def current_user():
+            return "current user"
+
+        @users.get("/users/{user_id}")
+        async def user(user_id: int):
+            return f"user:{user_id}"
+
+        @orders.post("/orders/{order_id}")
+        async def order(order_id: int):
+            return f"order:{order_id}"
+
+        router.include(users)
+        router.include(orders)
+        app = Karak(router=router)
+
+        self.assertEqual(make_request(app, "/users/me")[1]["body"], b"current user")
+        self.assertEqual(make_request(app, "/users/42")[1]["body"], b"user:42")
+        self.assertEqual(
+            make_request(app, "/orders/7", method="POST")[1]["body"], b"order:7"
+        )
+
+    def test_inclusion_snapshots_definitions_and_allows_child_reuse(self):
+        child = Router()
+        first = Router()
+        second = Router()
+
+        @child.get("/original")
+        async def original():
+            return "original"
+
+        first.include(child)
+        second.include(child)
+
+        @child.get("/later")
+        async def later():
+            return "later"
+
+        next(iter(child)).path = "/changed"
+        for parent in (first, second):
+            app = Karak(router=parent)
+            self.assertEqual(make_request(app, "/original")[1]["body"], b"original")
+            self.assertEqual(
+                make_request(app, "/later")[1]["body"], b"Route Not Found"
+            )
+
+    def test_nested_and_empty_routers_can_be_included(self):
+        child = Router()
+        parent = Router()
+        root = Router()
+
+        @child.get("/nested")
+        async def nested():
+            return "nested"
+
+        parent.include(Router())
+        parent.include(child)
+        root.include(parent)
+        self.assertEqual(
+            make_request(Karak(router=root), "/nested")[1]["body"], b"nested"
+        )
+
+    def test_duplicate_method_and_path_are_rejected_at_construction(self):
+        for included in (False, True):
+            with self.subTest(included=included):
+                router = Router()
+                other = Router() if included else router
+
+                @router.get("/users")
+                async def first():
+                    return "first"
+
+                @other.get("/users")
+                async def second():
+                    return "second"
+
+                if included:
+                    router.include(other)
+                with self.assertRaisesRegex(ValueError, "Duplicate route: GET /users"):
+                    Karak(router=router)
+
     def test_app_snapshots_routes_at_construction(self):
         router = Router()
 

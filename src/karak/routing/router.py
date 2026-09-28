@@ -10,6 +10,15 @@ class Router:
     def __init__(self) -> None:
         self._entries: list[RouteDefinition] = []
 
+    def include(self, router: Router) -> None:
+        """Append a snapshot of another router's definitions in registration order."""
+        self._entries.extend(
+            [
+                RouteDefinition(entry.path, entry.method, entry.handler)
+                for entry in router
+            ]
+        )
+
     def get(self, path: str):
         return self._route(path, "GET")
 

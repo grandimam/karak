@@ -8,6 +8,9 @@ from karak.exceptions import RequestValidationError
 from karak.parameters import inspect_handler
 from karak.parameters import ParameterSource
 from karak.request import Request
+from karak.request import REQUEST_SCOPE_KEY
+from karak.resources import ResourceContext
+from karak.resources import _ResourceRegistry
 from karak.response import Response
 from karak.routing.matching import Match
 from karak.routing.matching import PARAM_RE
@@ -31,6 +34,7 @@ class Route:
         *,
         methods: list[str] | None,
         handler: Callable[..., Any],
+        resources: _ResourceRegistry | None = None,
     ):
         if path and not path.startswith("/"):
             raise ValueError("Route paths must be empty or start with '/'")
@@ -43,6 +47,13 @@ class Route:
             self._handler,
             self._path_parameter_names,
         )
+        registry = resources or _ResourceRegistry([])
+        self._context_providers = {
+            name: registry.provider_for(parameter.resource_type)
+            for name, parameter in self._handler_params.items()
+            if parameter.source is ParameterSource.CONTEXT
+            and parameter.resource_type is not Request
+        }
 
     def match(self, scope: Scope, receive: Receive) -> Match:
         match = self._path_regex.match(scope["path"])
@@ -52,12 +63,21 @@ class Route:
         return Match.FULL if scope["method"] in self._methods else Match.PARTIAL
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        request = Request(scope, receive)
+        request = scope.get(REQUEST_SCOPE_KEY)
+        if not request:
+            request = Request(scope, receive)
         path_params = scope.get("path_params", {})
         query_params = request.params
         handler_arguments = {}
 
         for name, parameter in self._handler_params.items():
+            if parameter.source is ParameterSource.CONTEXT:
+                value = (
+                    request if parameter.resource_type is Request
+                    else self._context_providers[name].get()
+                )
+                handler_arguments[name] = ResourceContext(value)
+                continue
             if parameter.source is ParameterSource.PATH:
                 raw_value = path_params.get(name)
             else:

@@ -59,10 +59,68 @@ You can return bytes directly. Return `b""` when you want an empty response
 body, or use `Response(status_code=204, content=b"")` for a response with no
 content and an explicit 204 status.
 
+## Send headers
+
+Headers are named metadata sent before the response body. For example, a
+content type tells the caller how to interpret the bytes:
+
+```python
+response = Response(
+    content="Hello",
+    headers={"content-type": "text/plain; charset=utf-8"},
+)
+response.headers["x-example"] = "karak"
+```
+
+Return `response` from your handler. Header names are case-insensitive.
+Assignment replaces all existing values for that name. Use
+`response.headers.append("x-tag", "another")` to add a repeated field,
+`.getlist("x-tag")` to read all its values, or `del response.headers["x-tag"]`
+to remove it. `.get()` returns the first value. Invalid names and control
+characters in values are rejected. Set headers before returning the response.
+
+## Set and delete cookies
+
+Use the response to ask a browser to remember a value:
+
+```python
+response = Response(content="Preference saved")
+response.set_cookie("theme", "dark", max_age=604800, httponly=True)
+```
+
+Each call adds a separate `Set-Cookie` header. On a later request, read the
+value through `context.value.cookies`. Follow the [cookie round-trip example](request-context.md#save-a-cookie-then-send-it-back)
+to see both sides working together.
+
+| Option | Meaning |
+| --- | --- |
+| `max_age=604800` | Keep the cookie for seven days, expressed in seconds; omitted by default |
+| `expires=...` | An HTTP date string or UTC-aware `datetime` for expiry; omitted by default |
+| `path="/"` | Send the cookie to paths beneath `/`; this is the default |
+| `domain=...` | Optional domain scope; omitted by default |
+| `secure=True` | Only send over secure connections; defaults to `False` for local HTTP |
+| `httponly=True` | Hide the cookie from browser JavaScript; defaults to `False` |
+| `samesite="lax"` | Browser cross-site cookie policy; accepts `lax`, `strict`, or `none` |
+
+Use `secure=True` when serving cookies over HTTPS. These helpers serialize
+cookie attributes; they do not implement authentication or session storage.
+
+To remove the preference:
+
+```python
+response = Response(content="Preference removed")
+response.delete_cookie("theme")
+```
+
+Deletion sends an expired cookie with `Max-Age=0`. Pass the same `path` and
+`domain` used when setting it; a cookie with a different scope is a different
+cookie.
+
 ## Can I return JSON?
 
-Automatic JSON responses, custom headers, and streaming are not available in
-the main framework yet. Use text or bytes for the current examples.
+Automatic JSON responses and streaming are not available in the main framework
+yet. You can serialize JSON explicitly with Python's `json.dumps()` and return
+the resulting string in a `Response` with `content-type: application/json`.
 
 ## Understand error responses
 

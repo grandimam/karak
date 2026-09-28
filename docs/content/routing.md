@@ -80,6 +80,60 @@ Finish decorating your router before constructing the app. Routers remain
 editable, but later additions are only included when a new application is
 constructed. There is no separate startup compilation or freezing step.
 
+## Organize routes across modules
+
+Give each feature module its own router, then include those routers in the
+application's root router. Keep full URL paths in each module:
+
+```python
+# app/users.py
+from karak import Router
+
+router = Router()
+
+@router.get("/users/{user_id}")
+async def get_user(user_id: int):
+    return f"User {user_id}"
+```
+
+```python
+# app/orders.py
+from karak import Router
+
+router = Router()
+
+@router.get("/orders/{order_id}")
+async def get_order(order_id: int):
+    return f"Order {order_id}"
+```
+
+```python
+# app/main.py
+from karak import Karak
+from karak import Router
+
+from app.users import router as users_router
+from app.orders import router as orders_router
+
+router = Router()
+router.include(users_router)
+router.include(orders_router)
+
+app = Karak(router=router)
+```
+
+`include()` copies the child router's current definitions into the parent in
+registration order. Finish defining a child before including it: later changes
+to the child do not update the parent. You can reuse a child in multiple parents
+or include a router that already includes other routers. All routes become one
+flat list; there is no extra routing step during requests.
+
+Include routers before constructing `Karak`. Registering the same HTTP method
+and exact path twice raises `ValueError` during application construction,
+including duplicates across modules. GET and POST may share a path. Overlapping
+patterns still follow registration order, so register `/users/me` before
+`/users/{user_id}`.
+
 ## Use full paths
 
 Write the complete URL path in each decorator, including any shared segments:

@@ -8,12 +8,14 @@ your application needs. Karak is experimental and requires Python 3.13+.
 
 | I want to… | Read |
 | --- | --- |
+| Follow a week of beginner exercises | [Your first week](content/first-week.md) |
 | Understand routers, handlers, and resources | [How Karak works](content/introduction.md) |
 | See my first endpoint respond | [Quickstart](content/index.md) |
 | Set up my environment | [Installation](content/installation.md) |
 | Start, edit, and stop my app | [Run an application](content/application.md) |
 | Add an endpoint | [Define routes](content/routing.md) |
 | Accept filters, page numbers, and other input | [Read request values](content/parameters.md) |
+| Read headers, cookies, bodies, and request state | [Request context](content/request-context.md) |
 | Return a message or a status code | [Send responses](content/responses.md) |
 | Share a service or client across requests | [Application resources](content/resources.md) |
 

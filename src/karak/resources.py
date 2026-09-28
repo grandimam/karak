@@ -20,6 +20,8 @@ from typing import get_origin
 from typing import get_type_hints
 from typing import overload
 
+from karak.request import Request
+
 
 RESOURCE_STATE_KEY = "karak.resources"
 _current_session: ContextVar[_ResourceSession | None] = ContextVar(
@@ -29,7 +31,7 @@ _current_session: ContextVar[_ResourceSession | None] = ContextVar(
 
 @dataclass(frozen=True, slots=True)
 class ResourceContext[T]:
-    """One resolved dependency supplied to a resource factory."""
+    """One resolved value supplied to a resource factory or route handler."""
 
     value: T
 
@@ -109,6 +111,7 @@ class _ResourceRegistry:
         self._dependencies: dict[Resource[Any], dict[str, Resource[Any]]] = {}
         self._order: list[Resource[Any]] = []
         providers = {}
+        self._providers = providers
         hints_by_resource = {}
         for item in resources:
             if not isinstance(item, Resource):
@@ -117,6 +120,8 @@ class _ResourceRegistry:
                 raise ValueError(f"Resource '{item.factory.__name__}' is registered twice")
             hints = get_type_hints(item.factory)
             provided = _provided_type(item, hints)
+            if provided is Request:
+                raise ValueError("Request is a built-in request-scoped resource")
             if provided in providers:
                 previous = providers[provided]
                 raise ValueError(
@@ -145,6 +150,8 @@ class _ResourceRegistry:
                         "must declare ResourceContext[T]"
                     )
                 dependency_type = get_args(annotation)[0]
+                if dependency_type is Request:
+                    raise ValueError("Application resources cannot depend on request-scoped Request")
                 if dependency_type not in providers:
                     raise ValueError(
                         f"Resource '{item.factory.__name__}' parameter '{name}' "
@@ -173,6 +180,11 @@ class _ResourceRegistry:
 
         for item in resources:
             visit(item)
+
+    def provider_for(self, resource_type: Any) -> Resource[Any]:
+        if resource_type not in self._providers:
+            raise ValueError(f"No registered provider for handler resource {resource_type!r}")
+        return self._providers[resource_type]
 
     @contextmanager
     def bind(self, session):

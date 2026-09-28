@@ -57,8 +57,8 @@ router = Router()
 
 
 @router.get("/products/{product_id}")
-async def product(product_id: int):
-    return products.get().name_for(product_id)
+async def product(product_id: int, service: ResourceContext[ProductService]):
+    return service.value.name_for(product_id)
 
 
 app = Karak(router=router, resources=[products, catalog])
@@ -100,8 +100,11 @@ annotations are declarations; returned values are not runtime type-checked.
 Keep annotated classes importable at module scope so postponed annotations can
 be resolved when the application is constructed.
 
-`ResourceContext[T]` is a wrapper for one dependency in a resource factory.
-It is not a lookup dictionary, and it is not injected into endpoint parameters.
+`ResourceContext[T]` wraps one value supplied to a resource factory or handler.
+It is not a lookup dictionary. In a handler, `ResourceContext[Request]` supplies
+the current request without registering a factory. Other types require a
+registered application resource. Application resources cannot depend on
+`Request` because their lifetime extends across many requests.
 Declare each factory parameter as `ResourceContext[T]`; use keyword-compatible
 parameters, without positional-only parameters, `*args`, or `**kwargs`.
 
@@ -125,6 +128,14 @@ pools. Named qualifiers are not supported.
 
 ## Access resources from a handler
 
+The complete example uses `service: ResourceContext[ProductService]`. Karak
+checks that a provider exists during application construction, then supplies
+its active instance on each request. Access it through `service.value`.
+You can combine it with `context: ResourceContext[Request]` in the same handler;
+see [request context](request-context.md). Context parameters cannot have
+defaults or collide with a path placeholder.
+
+For code that already holds a resource handle, `.get()` is also available.
 The decorated name is a typed `Resource[T]` handle. Its `.get()` method returns
 the initialized instance for the application serving the current request:
 

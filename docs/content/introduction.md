@@ -53,11 +53,16 @@ Read [request values](parameters.md) for supported types and
 
 Use `@resource` to declare a factory and register the handle with
 `Karak(router=router, resources=[...])`. Karak initializes resources at startup
-and makes them available to handlers through the handle's `.get()` method.
+and makes them available to handlers through `ResourceContext[T]` parameters
+or the handle's `.get()` method.
 
 A factory parameter such as `pool: ResourceContext[DatabasePool]` asks Karak
 to supply an already-initialized dependency. Access it through `pool.value`.
-These annotations belong on resource factories, not endpoint parameters.
+The same convention works in handlers. `context: ResourceContext[Request]`
+provides the current request, while `pool: ResourceContext[DatabasePool]`
+provides a registered shared pool. The wrapper exposes `.value`; the requested
+type determines the lifetime. Request objects are built in and need no factory.
+Read [headers, cookies, and context](request-context.md) for a runnable example.
 
 The [resource guide](resources.md) gives a complete example and explains cleanup,
 dependency ordering, and application lifetimes.

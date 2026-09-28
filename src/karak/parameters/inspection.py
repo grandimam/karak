@@ -10,6 +10,7 @@ from typing import get_origin
 from typing import get_type_hints
 
 from karak.parameters.conversion import get_converter
+from karak.resources import ResourceContext
 
 
 VARS_AND_KWARGS = {
@@ -29,6 +30,8 @@ def _validate_path_parameters(
 
 
 def _validate_parameter(parameter: inspect.Parameter, annotation: Any) -> None:
+    if parameter.kind is inspect.Parameter.POSITIONAL_ONLY:
+        raise TypeError(f"Handler parameter '{parameter.name}' must accept a keyword argument")
     if parameter.kind in VARS_AND_KWARGS:
         raise TypeError(
             f"Variadic handler parameter '{parameter.name}' is not supported"
@@ -70,6 +73,14 @@ def _get_parameter_converter(
 class ParameterSource(Enum):
     PATH = "path"
     QUERY = "query"
+    CONTEXT = "context"
+
+
+@dataclass(frozen=True)
+class _ContextParam:
+    name: str
+    resource_type: Any
+    source: ParameterSource = ParameterSource.CONTEXT
 
 
 @dataclass(frozen=True)
@@ -84,16 +95,26 @@ class _Param:
 def inspect_handler(
     func: Callable[..., Any],
     path_params: set[str],
-) -> OrderedDict[str, _Param]:
+) -> OrderedDict[str, _Param | _ContextParam]:
     signature = inspect.signature(func)
     type_hints = get_type_hints(func)
 
     _validate_path_parameters(signature, path_params)
 
-    parameters: OrderedDict[str, _Param] = OrderedDict()
+    parameters: OrderedDict[str, _Param | _ContextParam] = OrderedDict()
     for name, parameter in signature.parameters.items():
         annotation = type_hints.get(name, parameter.annotation)
         _validate_parameter(parameter, annotation)
+        if annotation is ResourceContext or get_origin(annotation) is ResourceContext:
+            arguments = get_args(annotation)
+            if len(arguments) != 1 or arguments[0] is Any:
+                raise TypeError(f"Handler parameter '{name}' requires ResourceContext[T] with a concrete type")
+            if name in path_params:
+                raise TypeError(f"Context parameter '{name}' cannot be a path parameter")
+            if parameter.default is not inspect.Parameter.empty:
+                raise TypeError(f"Context parameter '{name}' cannot have a default")
+            parameters[name] = _ContextParam(name, arguments[0])
+            continue
         is_multi = get_origin(annotation) is list
         item_annotation = annotation
 

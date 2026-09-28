@@ -11,6 +11,8 @@ from karak.types import Receive
 from karak.types import Send
 
 from karak.response import Response
+from karak.request import Request
+from karak.request import REQUEST_SCOPE_KEY
 from karak.routing import Router
 from karak.routing import Match
 from karak.routing import Route
@@ -33,14 +35,21 @@ class Karak:
         self._lifespan_factory = lifespan
         self._resources = _ResourceRegistry(resources or [])
         self._static_files = StaticFiles(static_dir) if static_dir else None
-        self._routes = [
-            Route(
+        self._routes: list[Route] = []
+        registered: set[tuple[str, str]] = set()
+        for definition in router:
+            key = (definition.method, definition.path)
+            if key in registered:
+                raise ValueError(
+                    f"Duplicate route: {definition.method} {definition.path}"
+                )
+            registered.add(key)
+            self._routes.append(Route(
                 definition.path,
                 methods=[definition.method],
                 handler=definition.handler,
-            )
-            for definition in router
-        ]
+                resources=self._resources,
+            ))
         self._app = ExceptionMiddleware(self._dispatch)
 
     async def _dispatch(
@@ -101,6 +110,8 @@ class Karak:
         send: Send,
     ) -> None:
         session = scope.get("state", {}).get(RESOURCE_STATE_KEY)
+        scope = dict(scope)
+        scope[REQUEST_SCOPE_KEY] = Request(scope, receive)
         with self._resources.bind(session):
             await self._app(scope, receive, send)
 

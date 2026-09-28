@@ -6,14 +6,17 @@ description: Install Karak, write an async endpoint, and run your first Python H
 <header class="docs-opening">
   <div class="opening-copy">
     <h1 id="start-with-a-little-python">Build your first<br>Karak application.</h1>
-    <p class="lead">Write an endpoint, start the server, and make a request.</p>
+    <p class="lead">Learn to build Python backends, starting with one working endpoint.</p>
     <p class="page-status">Experimental · Python 3.13+</p>
   </div>
   <img class="opening-sphere" src="assets/share-card-sphere.png" width="1734" height="907" alt="" fetchpriority="high">
 </header>
 
-This guide takes you from a repository checkout to a running HTTP endpoint.
-Karak is experimental; use these examples for local development and evaluation.
+Karak's goal is to help you build production backend applications with one
+coherent Python programming model. Start here with a running HTTP endpoint,
+then follow [your first week](first-week.md) to learn routing, validation,
+request context, resources, and testing through practical exercises.
+Karak is experimental; today's examples are for local development and evaluation.
 
 ## Install
 
@@ -72,5 +75,7 @@ Press **Ctrl+C** in the terminal when you want to stop it.
 [Add another endpoint](routing.md), then [accept values from a request](parameters.md).
 Learn to [send responses](responses.md) and
 [share services across requests](resources.md) as your application grows.
+Use [request context](request-context.md) for headers, cookies, and body bytes.
+For a guided sequence with daily checkpoints, follow [your first week](first-week.md).
 
 [Define routes →](routing.md){: .next-link }
