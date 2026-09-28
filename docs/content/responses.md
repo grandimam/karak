@@ -40,7 +40,7 @@ async def user(user_id: int):
     return "User 42"
 
 
-app = Karak(routes=[router])
+app = Karak(router=router)
 ```
 
 Start it with `uv run uvicorn main:app --reload`, then inspect the status and

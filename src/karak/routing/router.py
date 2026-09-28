@@ -3,22 +3,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from collections.abc import Iterator
 
-from karak.routing.base import BaseRouter
-from karak.routing.matching import join_paths
-from karak.routing.routes import RouteDefinition
+from karak.routing.route import RouteDefinition
 
 
-class Router(BaseRouter):
-    def __init__(
-        self,
-        *,
-        routes: list[BaseRouter] | None = None,
-    ) -> None:
-        self._entries: list[BaseRouter | RouteDefinition] = []
-        for route in routes or []:
-            if not isinstance(route, BaseRouter):
-                raise TypeError("routes must contain BaseRouter instances")
-            self._entries.append(route)
+class Router:
+    def __init__(self) -> None:
+        self._entries: list[RouteDefinition] = []
 
     def get(self, path: str):
         return self._route(path, "GET")
@@ -28,20 +18,12 @@ class Router(BaseRouter):
 
     def _route(self, path: str, method: str):
         def wrap(handler: Callable):
-            if path and not path.startswith("/"):
-                raise ValueError("Route paths must be empty or start with '/'")
+            if not path.startswith("/"):
+                raise ValueError("Route paths must start with '/'")
             self._entries.append(RouteDefinition(path, method, handler))
             return handler
 
         return wrap
 
-    def flatten(self, prefix: str = "") -> Iterator[RouteDefinition]:
-        for entry in self._entries:
-            if isinstance(entry, BaseRouter):
-                yield from entry.flatten(prefix)
-            else:
-                yield RouteDefinition(
-                    join_paths(prefix, entry.path),
-                    entry.method,
-                    entry.handler,
-                )
+    def __iter__(self) -> Iterator[RouteDefinition]:
+        return iter(self._entries)

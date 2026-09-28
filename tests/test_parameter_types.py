@@ -33,7 +33,7 @@ class ParameterTypeTests(unittest.TestCase):
 
         handler.__annotations__ = {"value": annotation}
         router.get("/values")(handler)
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         return make_request(app, "/values", query), received
 
     def test_supported_values_reach_handler_with_expected_types(self):
@@ -102,7 +102,7 @@ class ParameterTypeTests(unittest.TestCase):
             return "ok"
 
         identifier = UUID("12345678-1234-5678-1234-567812345678")
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         messages = make_request(app, f"/values/{identifier}")
         self.assertEqual(messages[0]["status"], 200)
         self.assertEqual(received, [(identifier, [10])])
@@ -127,4 +127,4 @@ class ParameterTypeTests(unittest.TestCase):
                 path = "/values/{value}" if path_names else "/values"
                 router.get(path)(handler)
                 with self.assertRaises(TypeError):
-                    Karak(routes=[router])
+                    Karak(router=router)

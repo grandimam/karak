@@ -36,7 +36,7 @@ class RouteValidationTests(unittest.TestCase):
             ValueError,
             "Path parameters missing from handler signature: user_id",
         ):
-            Karak(routes=[router])
+            Karak(router=router)
 
     def test_path_and_query_parameters_are_converted(self):
         router = Router()
@@ -45,7 +45,7 @@ class RouteValidationTests(unittest.TestCase):
         async def user(user_id: int, active: bool):
             return f"{user_id}:{active}"
 
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         messages = make_request(app, "/users/42", b"active=true")
 
         self.assertEqual(messages[0]["status"], 200)
@@ -58,7 +58,7 @@ class RouteValidationTests(unittest.TestCase):
         async def user(user_id: int, page: int = 1):
             return f"{user_id}:{page}"
 
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         messages = make_request(app, "/users/42")
 
         self.assertEqual(messages[0]["status"], 200)
@@ -71,7 +71,7 @@ class RouteValidationTests(unittest.TestCase):
         async def user(user_id: int):
             return str(user_id)
 
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         messages = make_request(app, "/users/not-an-int")
 
         self.assertEqual(messages[0]["status"], 422)
@@ -84,7 +84,7 @@ class RouteValidationTests(unittest.TestCase):
         async def users(limit: int):
             return str(limit)
 
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         messages = make_request(app, "/users")
 
         self.assertEqual(messages[0]["status"], 422)
@@ -97,7 +97,7 @@ class RouteValidationTests(unittest.TestCase):
         async def users():
             raise RuntimeError("database unavailable")
 
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         with self.assertLogs("karak.errors", level="ERROR"):
             messages = make_request(app, "/users")
 

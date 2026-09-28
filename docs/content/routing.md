@@ -8,8 +8,8 @@ description: Give your application endpoints and read values from their URLs.
 <p class="lead">Choose the URL someone visits and the function that answers it.</p>
 
 A route connects a URL to your code. In the [quickstart](index.md), `/` returned
-a greeting. Define endpoints on your `router`, then pass it in the application's
-`routes` list. Add this before constructing `Karak(routes=[router])`:
+a greeting. Define endpoints on your `router` before constructing the application
+with `Karak(router=router)`:
 
 ```python
 @router.get("/users/{user_id}")
@@ -68,58 +68,57 @@ async def create_user(name: str):
 After defining your endpoints, pass the router into the application:
 
 ```python
-app = Karak(routes=[router])
+app = Karak(router=router)
 ```
 
-`Router` and `Mount` both implement `BaseRouter.flatten(prefix="")`. This method
-produces endpoint definitions with complete paths. `Karak` uses those definitions
-to create executable routes and validate handler signatures during initialization.
-The application then matches those routes directly when serving requests.
+Each decorator records an endpoint's full path, HTTP method, and handler.
+`Karak` uses those definitions to create executable routes and validate handler
+signatures during initialization. The application then matches those routes
+directly when serving requests.
 
-Finish decorating your routers before constructing the app. Routers remain
+Finish decorating your router before constructing the app. Routers remain
 editable, but later additions are only included when a new application is
 constructed. There is no separate startup compilation or freezing step.
 
-## Mount a router
+## Use full paths
 
-Use `Mount` to give a router a shared prefix. Mounts can wrap any `BaseRouter`,
-including another mount. Prefixes and endpoint paths can both contain parameters:
+Write the complete URL path in each decorator, including any shared segments:
 
 ```python
-from karak import Karak
-from karak import Mount
-from karak import Router
-
-posts = Router()
-
-
-@posts.get("/{post_id}")
+@router.get("/api/users/{user_id}/posts/{post_id}")
 async def post(user_id: int, post_id: int, preview: bool = False):
     return f"User {user_id}, post {post_id}, preview={preview}"
-
-
-users = Mount(path="/users/{user_id}/posts", router=posts)
-app = Karak(routes=[Mount(path="/api", router=users)])
 ```
 
 `GET /api/users/42/posts/7?preview=true` passes `user_id=42`, `post_id=7`, and
-`preview=True` to `post`. Each handler must declare all parameters inherited
-from its mounts. A query value with the same name cannot override a path value.
+`preview=True` to `post`. A query value with the same name cannot override a
+path value.
 
-To group several routers, pass them in another router's constructor, for example
-`Router(routes=[Mount(path="/users", router=users_router), other_router])`.
-Endpoint decorators on that parent add its own routes after those child groups.
+Paths must start with `/`; use `/` for the root endpoint. Trailing slashes
+are matched exactly, with no automatic redirects. Duplicate parameter names
+in a path are rejected when the application is constructed.
 
-Mounts only carry prefixes and references to children. The complete tree is
-flattened when `Karak` is constructed, so additions made to a child before then
-are included. Reusing a router in different mounts or applications leaves its
-original paths unchanged.
+## Serve static files
 
-Mount prefixes must start with `/`; a trailing slash is ignored when joining
-them to child paths. Mounting at `/` adds no prefix. Under `/api`, an endpoint
-path of `""` matches `/api`, while `"/"` matches `/api/`. There are no automatic
-slash redirects. Duplicate parameter names in a complete path are rejected
-when the application is constructed.
+Pass an existing directory when constructing the application:
+
+```python
+app = Karak(router=router, static_dir="static")
+```
+
+The built-in `StaticFiles` handler reserves `/static/` before decorated routes.
+For example, `/static/css/style.css` serves `static/css/style.css`. Relative
+directory paths are resolved from the process's working directory at construction.
+Only the directory is checked at startup; files are opened when requested.
+
+`GET` streams file bytes in chunks, and `HEAD` returns the same headers without
+the body. Responses include the content type and file size. Missing files,
+directories, and paths escaping the configured directory return `404` without
+falling through to decorated routes. Other HTTP methods return `405`.
+
+Files added or changed after startup are used on subsequent requests. Directory
+listings, automatic index pages, conditional caching, and byte ranges are not
+implemented.
 
 ## Prototype limitations
 

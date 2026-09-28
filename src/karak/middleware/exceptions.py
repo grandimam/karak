@@ -16,11 +16,23 @@ class ExceptionMiddleware:
         self._app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        response_started = False
+
+        async def send_response(message):
+            nonlocal response_started
+            if message["type"] == "http.response.start":
+                response_started = True
+            await send(message)
+
         try:
-            await self._app(scope, receive, send)
+            await self._app(scope, receive, send_response)
         except RequestValidationError as exc:
+            if response_started:
+                raise
             await Response(status_code=422, content=str(exc))(scope, receive, send)
         except Exception:
+            if response_started:
+                raise
             logger.exception(
                 "Unhandled exception while serving %s %s",
                 scope.get("method", ""),

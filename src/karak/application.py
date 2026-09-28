@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from karak.types import Scope
 from karak.types import Receive
 from karak.types import Send
 
 from karak.response import Response
-from karak.routing import BaseRouter
+from karak.routing import Router
 from karak.routing import Match
 from karak.routing import Route
+from karak.routing.staticfiles import StaticFiles
 from karak.middleware import ExceptionMiddleware
 
 
@@ -15,16 +18,17 @@ class Karak:
     def __init__(
         self,
         *,
-        routes: list[BaseRouter] | None = None,
+        router: Router,
+        static_dir: str | Path | None = None,
     ) -> None:
+        self._static_files = StaticFiles(static_dir) if static_dir else None
         self._routes = [
             Route(
                 definition.path,
                 methods=[definition.method],
                 handler=definition.handler,
             )
-            for router in routes or []
-            for definition in router.flatten()
+            for definition in router
         ]
         self._app = ExceptionMiddleware(self._dispatch)
 
@@ -34,6 +38,10 @@ class Karak:
         receive: Receive,
         send: Send,
     ) -> None:
+        if self._static_files and self._static_files.matches(scope["path"]):
+            await self._static_files(scope, receive, send)
+            return
+
         partial_match = False
         for route in self._routes:
             match = route.match(scope, receive)

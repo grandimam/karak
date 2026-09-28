@@ -47,14 +47,14 @@ async def accepted():
     return Response(status_code=202, content="Accepted")
 
 
-app = Karak(routes=[router])
+app = Karak(router=router)
 ```
 
 Run it with `uv run uvicorn example:app --reload`.
 
 Define endpoints with `@router.get(path)` or `@router.post(path)`, then construct
-`Karak(routes=[router])`. The decorator selects the HTTP method. The app
-flattens the supplied routers and builds its routes during initialization,
+`Karak(router=router)`. The decorator selects the HTTP method. The app
+builds its routes from the supplied router during initialization,
 so declare endpoints before constructing it.
 
 ## Path and query parameters
@@ -81,14 +81,10 @@ query parameters. Repeated scalar keys, missing required values, and invalid
 values produce HTTP 422 responses. Unsupported annotations and missing path
 parameters in the handler signature fail during application construction.
 
-## Mounted routers
+## Route registration
 
-`Router` and `Mount` implement `BaseRouter.flatten()`. Pass either in the
-application's `routes` list. Mounts add their prefix while delegating to their
-children; the application builds each executable route after the complete
-path is known. Nested mount parameters are validated and converted using the
-handler's annotations. See the [routing guide](content/routing.md#mount-a-router)
-for a complete example.
+Define full paths on one router using decorators, then pass it to
+`Karak(router=router)`. See the [routing guide](content/routing.md) for examples.
 
 Applications capture the routes available at construction. Routers remain
 editable and reusable, but later additions require constructing a new app to

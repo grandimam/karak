@@ -15,13 +15,13 @@ class ApplicationTests(unittest.TestCase):
         async def index():
             return Response(status_code=201, content=b"created")
 
-        app = Karak(routes=[router])
+        app = Karak(router=router)
         messages = make_request(app, "/")
         self.assertEqual(messages[0]["status"], 201)
         self.assertEqual(messages[1]["body"], b"created")
 
     def test_lifespan_acknowledges_startup_and_shutdown(self):
-        app = Karak()
+        app = Karak(router=Router())
         events = iter(
             [
                 {"type": "lifespan.startup"},

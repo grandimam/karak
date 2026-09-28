@@ -21,19 +21,16 @@ ASGI server
     → ASGI send
 ```
 
-Router decorators store endpoint definitions: path, method, and handler.
-`Router` and `Mount` implement the shared `BaseRouter.flatten(prefix="")`
-contract. A router yields its definitions and child groups; a mount adds its
-prefix and delegates to its child.
+Router decorators store endpoint definitions: full path, method, and handler.
 
-During application construction, `Karak` consumes the flattened definitions
+During application construction, `Karak` iterates over the supplied router
 and creates each `Route` once, using its complete path. `inspect_handler` then
 reads the handler signature, validates all path placeholders, and selects
 converters. The original definitions remain reusable and editable.
 
 During a request, `Karak._dispatch` checks its routes in order. The matching `Route`
 builds handler arguments from path and query values, awaits the handler, and
-sends its result through a `Response`. No flattening or handler inspection
+sends its result through a `Response`. No route construction or handler inspection
 runs during requests or lifespan startup.
 
 See the [ASGI guide](asgi.md) for runnable examples and routing limitations.

@@ -48,7 +48,7 @@ async def index():
     return "Hello from Karak"
 
 
-app = Karak(routes=[router])
+app = Karak(router=router)
 ```
 
 This tells Karak to run `index()` when someone visits `/`. The text you return

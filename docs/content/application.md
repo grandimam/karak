@@ -22,7 +22,7 @@ async def index():
     return "Hello from Karak"
 
 
-app = Karak(routes=[router])
+app = Karak(router=router)
 ```
 
 ## Start the development server

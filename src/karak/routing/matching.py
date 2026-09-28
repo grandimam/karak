@@ -12,10 +12,6 @@ class Match(Enum):
 PARAM_RE = re.compile(r"{([a-zA-Z_][a-zA-Z0-9_]*)}")
 
 
-def join_paths(prefix: str, path: str) -> str:
-    return f"{prefix.rstrip('/')}{path}" or "/"
-
-
 def compile_path(path: str) -> re.Pattern:
     names = PARAM_RE.findall(path)
     if len(names) != len(set(names)):
