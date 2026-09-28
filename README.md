@@ -257,6 +257,9 @@ checkpoints and an explanation of the remaining work for production.
 
 ## Where we are
 
+For reproducible local HTTP comparisons with FastAPI, see
+[benchmarks](docs/content/benchmarks.md) and the [benchmark runner](benchmarks/README.md).
+
 The HTTP foundation is available for experimentation. The broader system is
 planned. Each capability should extend the same programming, configuration,
 lifecycle, and operational models.

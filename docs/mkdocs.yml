@@ -33,4 +33,5 @@ nav:
       - Send responses: responses.md
       - Share application resources: resources.md
   - About:
+      - Benchmarks: benchmarks.md
       - Mission: design.md

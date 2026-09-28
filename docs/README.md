@@ -18,6 +18,7 @@ your application needs. Karak is experimental and requires Python 3.13+.
 | Read headers, cookies, bodies, and request state | [Request context](content/request-context.md) |
 | Return a message or a status code | [Send responses](content/responses.md) |
 | Share a service or client across requests | [Application resources](content/resources.md) |
+| Compare measured HTTP performance | [Benchmarks](content/benchmarks.md) |
 
 ## Mission
 

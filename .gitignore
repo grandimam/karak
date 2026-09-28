@@ -22,3 +22,5 @@ Thumbs.db
 *.db
 *.sqlite
 .env
+/benchmarks/results/
+/docs/content/assets/benchmarks/
