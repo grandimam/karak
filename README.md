@@ -4,10 +4,10 @@
 
 # Karak
 
-**Your Python application. Less infrastructure.**
+**Python backend development should be integrated, not assembled.**
 
-Building a Python application runtime for APIs, durable jobs, and schedules.<br>
-One application. Fewer services to operate.
+One coherent system to learn deeply, build with, and operate.<br>
+Learn the fundamentals. Learn Karak deeply. Build serious Python backends.
 
 ![Status: Experimental](https://img.shields.io/badge/status-experimental-bb9363?style=flat-square&labelColor=263e48)
 ![Python: 3.13+](https://img.shields.io/badge/python-3.13%2B-345f76?style=flat-square&labelColor=263e48&logo=python&logoColor=white)
@@ -23,50 +23,62 @@ One application. Fewer services to operate.
 
 ## The vision
 
-A Python application grows beyond its first endpoint. It sends email, generates
-reports, delivers webhooks, and runs work every night. Supporting that work can
-mean adding a task queue, a message broker, a scheduler, a job dashboard, and
-the configuration that connects them.
+Python backend development has become fragmented. Building a production
+application often means assembling an ASGI framework, server, task queue,
+broker, scheduler, migration tools, observability, and deployment tooling.
+Each brings its own abstractions, configuration, lifecycle, and failure modes.
 
-Karak aims to bring **APIs, durable background jobs, and scheduled work** into
-one application, with shared configuration, resources, and visibility. The goal
-is to let you remove the extra services you would otherwise assemble to run
-that work reliably.
+Karak's thesis is that backend engineering should be coherent. An engineer
+should be able to learn Python, understand backend fundamentals, and learn
+Karak deeply—then apply that knowledge across the production backend.
+Karak should absorb the unnecessary integration and tooling complexity.
 
-**The deployment target: your application and its database.** We plan to store
-jobs, schedules, and execution history in the application's existing database,
-with PostgreSQL as the initial target. API and worker processes should be able
-to run together on one machine or scale independently from the same codebase.
+### Learn the fundamentals. Learn Karak deeply.
 
-### What we aim to replace
+Karak is built for engineers. HTTP, databases, transactions, concurrency,
+reliability, and distributed systems remain essential knowledge. The goal is
+to let you apply those concepts through one coherent system without needing
+to become an expert in a dozen unrelated tools.
 
-These are planned replacement targets; they are not available in Karak today.
+The ambition is to make **“Karak engineer”** meaningful: someone who can build
+and operate serious Python backends through deep knowledge of the fundamentals
+and Karak.
 
-| What you could remove | What Karak aims to provide |
-| :--- | :--- |
-| **Celery, RQ, or a separate task library** | Durable jobs, retries, timeouts, concurrency controls, and recovery after worker crashes |
-| **Redis or RabbitMQ used only for jobs** | A queue backed by your existing database, without a dedicated message broker |
-| **Celery Beat and application cron scripts** | Delayed and recurring jobs, with policies for missed and overlapping runs |
-| **A separate job result backend** | Persistent job status, progress, results, and failure history |
-| **Flower or a custom job dashboard** | Built-in job inspection, manual retries, queue controls, and worker health |
-| **Custom webhook and workflow glue** | Reliable webhook delivery and multistep work with persisted progress |
+### One model across the production backend
 
-The first focus is reliable jobs, scheduling, and the tools to operate them.
-Webhook delivery and workflows would build on that foundation. Removing a
-dedicated broker depends on what else your application uses it for; database
-storage, backups, hosting, and worker compute remain part of operating the app.
+Karak should progressively own more of the backend experience:
 
-### One application, from request to completion
+**HTTP → persistence → background work → scheduling → observability → operation**
 
-Imagine a customer requesting a report. Your API saves the request and queues
-the work in the same database transaction. A worker generates the report,
-recovers after an interruption, and delivers a completion webhook. You can
-inspect failures, retry work, and schedule the same report for next Monday.
+Across that progression, the design commitment is:
 
-That is the experience we are building toward: one application definition,
-shared services, and a clear view of the work from request to completion.
+- **One programming model:** familiar Python functions, types, and shared resources.
+- **One configuration model:** consistent settings across application capabilities.
+- **One lifecycle:** defined resource setup, execution, cleanup, and shutdown.
+- **One operational model:** consistent ways to run, inspect, diagnose, and recover work.
 
-[Explore the vision →](docs/content/design.md) &nbsp; · &nbsp; [Read the architecture proposals →](docs/design.md)
+This is the product direction. Today Karak implements an early HTTP foundation;
+the integrated production experience is still to be built.
+
+### Background work shows why this matters
+
+An application might begin by sending an email after a request, then need work
+that survives restarts, retries failures, and runs across multiple workers.
+That growth often means moving from framework background tasks to Celery,
+Redis or RabbitMQ, workers, and a scheduler, with a new set of concepts and
+configuration to learn.
+
+Karak should provide a path from simple background execution to durable
+distributed work while preserving the developer's mental model. Durability,
+retry policies, duplicate execution, and transaction boundaries must remain
+explicit as requirements grow. Engineers should gain stronger capabilities
+within Karak, with the reliability guarantees clearly documented at each step.
+
+Background work is one example of the broader thesis. Persistence, migrations,
+scheduling, observability, and operation should follow the same principle:
+new capabilities should build on what a Karak engineer already knows.
+
+[Explore the thesis and direction →](docs/content/design.md) &nbsp; · &nbsp; [Read the architecture proposals →](docs/design.md)
 
 ## What you can try today
 
@@ -221,17 +233,19 @@ definitions and builds the final routes when the application is constructed.
 
 ## Where we are
 
-The HTTP foundation is available for experimentation. The rest of the runtime
-is planned, with reliable jobs and scheduling as the first infrastructure
-replacement goals.
+The HTTP foundation is available for experimentation. The broader system is
+planned. Each capability should extend the same programming, configuration,
+lifecycle, and operational models.
 
 | Area | Today | Direction |
 | :--- | :--- | :--- |
 | **HTTP** | ASGI, router decorators, nested mounts, typed inputs, validation, text and bytes | JSON, shared dependencies, generated API documentation |
 | **Application lifecycle** | Startup and shutdown acknowledgements | Resource setup, cleanup, and graceful shutdown |
-| **Background work** | Planned | Database-backed jobs, workers, retries, and failure recovery |
+| **Persistence** | Planned | Database resources, explicit transactions, and migrations within the application model |
+| **Background work** | Planned | A path from simple execution to durable distributed jobs, retries, and failure recovery |
 | **Recurring work** | Planned | Scheduling with defined behavior for missed and overlapping runs |
-| **Operations** | Planned | Job inspection and retries, shared configuration, logs, metrics, and health information |
+| **Observability** | Planned | Connected request and job context, logs, metrics, and health information |
+| **Operation** | Planned | Consistent configuration, process management, deployment, inspection, and recovery |
 | **Webhooks and workflows** | Later | Reliable delivery and multistep work built on durable jobs |
 | **Execution** | Async route handlers | Synchronous Python and free-threaded execution |
 

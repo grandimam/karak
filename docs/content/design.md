@@ -1,133 +1,143 @@
 ---
-title: Our vision
-description: What we plan to build with Karak—APIs, durable jobs, scheduling, and the tools to operate them together.
+title: Thesis and direction
+description: Python backend development should be integrated, not assembled. Karak's thesis and path toward one coherent production backend system.
 ---
 
-# Build the application. Bring it to production.
+# One coherent system to learn deeply.
 
-<p class="lead">APIs, jobs, workers, and scheduled tasks—with one way to run them.</p>
+<p class="lead">Learn the fundamentals. Learn Karak deeply. Build and operate serious Python backends.</p>
 
-Getting an endpoint to respond is the beginning. The work grows when it needs
-to call other services, process something later, retry after a failure, and
-keep running through a deployment.
+## The thesis
 
-We are building toward a Karak experience that covers that whole journey.
-You should be able to stay focused on your Python application as it grows
-beyond its first API.
+Python backend development has become too fragmented. A production application
+often requires a collection of independent tools: an ASGI framework, server,
+task queue, broker, scheduler, migrations, observability, deployment tooling,
+and more. Each brings its own abstractions, configuration, operational model,
+and failure modes. Engineers spend substantial effort learning how those
+pieces fit together and maintaining their connections.
 
-**This page describes our plans.** Today you can try basic HTTP endpoints,
-typed URL inputs, validation, and text or byte responses. Durable jobs,
-scheduling, and the production tools below are not available yet.
+**Python backend development should be integrated, not assembled.**
 
-## What we want you to be able to build
+Karak should give engineers one coherent system to learn deeply. A developer
+should be able to learn Python, understand the fundamentals of backend
+engineering, and learn Karak. Karak should absorb the unnecessary integration
+and tooling complexity around those fundamentals.
 
-Imagine an application that generates customer reports. The experience we
-want Karak to support looks like this:
+**This is the direction, not today's feature set.** Karak currently provides
+an experimental HTTP foundation with async endpoints, typed URL inputs,
+validation, and text or byte responses. The broader capabilities below are
+planned, and Karak is not production-ready.
 
-1. A customer requests a report through your API.
-2. You validate the request and queue the report without making the customer
-   wait for it to finish.
-3. A worker generates the report using the same configuration and services as
-   the API.
-4. If a temporary failure occurs, the job can retry according to your policy.
-   If it still fails, you can find out why and decide what to do next.
-5. The customer can check whether the report is waiting, running, finished, or
-   failed.
-6. You can schedule the same work to run each week, and deploy updates with
-   defined behavior for work already in progress.
+## Built for engineers who understand their systems
 
-That is one application from the developer’s point of view. Our goal is to
-make it feel like one when you build and operate it, too.
+A Karak engineer should understand HTTP, databases, transactions, concurrency,
+reliability, and distributed systems. Those concepts explain whether an
+application behaves correctly under load, during failures, and through change.
 
-## Build useful APIs
+Karak should make those concepts easier to apply. It must expose transaction
+boundaries, resource lifetimes, retry policies, and failure behavior clearly.
+Engineers still decide what consistency their application needs, whether an
+operation is safe to retry, and how to handle partial failure.
 
-You should be able to describe the data an endpoint accepts, return structured
-responses, and give callers clear errors. Shared services such as database
-connections should be straightforward to use across endpoints.
+The ambition is to make “Karak engineer” meaningful: deep knowledge of Karak
+and backend fundamentals should be enough to build and operate serious Python
+backends without becoming an expert in a dozen unrelated tools.
 
-We plan to extend the current HTTP foundation with JSON bodies and responses,
-shared dependencies, application setup and cleanup, middleware, and generated
-API documentation. You should spend less time repeating input parsing and
-wiring up the same service in different places.
+## Four commitments across the backend
 
-## Move work out of the request
+| Commitment | What an engineer should be able to rely on |
+| --- | --- |
+| One programming model | Familiar Python functions and types, with consistent ways to use shared application resources across requests and work |
+| One configuration model | Settings with consistent naming, validation, and override rules across the application |
+| One lifecycle | Defined setup, resource ownership, execution, cleanup, and graceful shutdown across process roles |
+| One operational model | Consistent ways to run, inspect, diagnose, deploy, and recover the application |
 
-Some work takes longer than a caller should wait: sending email, processing
-uploads, generating reports, or contacting an unreliable external service.
-You should be able to submit that work and return a useful response promptly.
+One system can run in multiple processes and on multiple machines. Coherence
+means those processes share an application model and understandable contracts.
+It does not require every workload to run in one process or every component
+to be implemented from scratch. Karak should own the integration and document
+the behavior engineers depend on, including the boundaries of external systems.
 
-We want Karak to cover background-job workflows you might otherwise use a
-separate task queue such as Celery for. The plan includes durable jobs,
-retries, timeouts, job status, and a way to inspect and retry failures.
+## Progressively own the production backend
 
-Durable means the work must have defined behavior when a worker crashes or
-restarts. Delivery guarantees, duplicate execution, and recovery need an
-explicit design before this can be relied on. There is no durable job system
-in Karak today.
+**HTTP → persistence → background work → scheduling → observability → operation**
 
-## Schedule recurring work
+This progression describes the scope Karak should grow to own. Observability
+and operational behavior need to develop alongside each capability. It is a
+direction, not a release calendar.
 
-Daily summaries, weekly reports, and regular cleanup should belong to the same
-application as your on-demand jobs. You should be able to express a schedule
-and see whether the expected work actually ran.
-
-Scheduling is planned. We still need to define how missed runs, overlapping
-runs, time zones, and retries behave. These decisions matter as much as the
-syntax for creating a schedule.
-
-## Operate with confidence
-
-You should be able to answer everyday questions without piecing together a
-new set of tools for each part of your application:
-
-- What is running, waiting, or failing?
-- Which request started this job?
-- Why did a task fail, and is it safe to retry?
-- Is the application healthy, or are its workers falling behind?
-- What happens to in-flight work when I deploy or stop a worker?
-
-The planned production experience includes consistent configuration, shared
-resource lifetimes, useful logs and metrics, health information, and graceful
-shutdown. The exact commands and interfaces are still being designed; we are
-not promising a particular dashboard, hosting service, or deployment platform.
-
-## Use more of your machine
-
-We want ordinary Python code to work well for both concurrent requests and
-parallel computation. You should be able to benefit from free-threaded Python
-where it fits your workload, with understandable controls over workers and
-resource use.
-
-A unified synchronous experience is a
-longer-term goal; the main framework currently uses `async def` endpoints.
-
-## The path we plan to take
-
-| Area | What it should let you do | Status |
+| Area | Intended experience | Today |
 | --- | --- | --- |
-| HTTP foundation | Run endpoints, accept typed URL values, and return text or bytes | Available for experimentation |
-| Complete API workflows | Accept JSON, share services, and generate API documentation | Planned |
-| Reliable background jobs | Submit work, track it, retry failures, and recover after interruptions | Planned |
-| Recurring work | Schedule jobs and understand missed or overlapping runs | Planned |
-| Production operations | Configure, observe, and shut down APIs and workers consistently | Planned |
-| Free-threaded execution | Explore synchronous Python and parallel workloads | Planned |
+| HTTP | Define endpoints, validate input, return structured responses, and share services | Async endpoints, typed path and query inputs, validation, text and bytes |
+| Persistence | Manage database resources, transactions, and schema migrations within Karak's application model | Planned |
+| Background work | Grow from simple background execution to durable distributed work using the same concepts | Planned |
+| Scheduling | Schedule the same work with explicit behavior for missed runs, overlaps, and time zones | Planned |
+| Observability | Follow requests and jobs through logs, metrics, failures, and health information | Planned |
+| Operation | Configure, start, deploy, stop, inspect, and recover application processes consistently | Planned |
 
-The intended progression is to strengthen the API experience, establish shared
-configuration and resource management, then build reliable jobs and scheduling
-on those foundations. Observability and shutdown behavior need to develop
-alongside each capability. This is a direction, not a release calendar; the
-order can change as we learn.
+Persistence is part of the thesis because data, transactions, and schema
+changes shape application correctness. The specific database APIs and migration
+interfaces are still to be designed. Similarly, operation is a product
+responsibility; the exact deployment commands and supported environments remain
+open decisions.
 
-## What will stay simple
+## Background work is the test case
 
-You should be able to begin with a small application and add capabilities as
-you need them. We want familiar Python functions, types, defaults, and modules
-to do as much of the explaining as possible. Where behavior needs a choice—such
-as a retry policy or a job’s lifetime—that choice should be explicit.
+An application first needs to send an email after a request. Later, the email
+must survive an application restart. Then it needs retries, more workers, and
+a recurring schedule.
 
-Production readiness is something we have to earn through reliable behavior,
-testing, documentation, and real use. Karak is not there yet.
+Today that progression often means graduating from framework background tasks
+to Celery plus Redis or RabbitMQ, worker configuration, a scheduler, and tools
+to inspect failures. The engineer must learn a new programming and operational
+model to continue solving the same application problem.
 
-Try the [quickstart](index.md) to explore what exists today. If you want to
-help shape the project, [open a discussion in the issue tracker](https://github.com/grandimam/karak/issues)
-with a workflow you would like Karak to make easier.
+Karak should support that growth within one system:
+
+1. Define background work using familiar Python and application resources.
+2. Choose durable execution when work must survive a process restart.
+3. Configure retries, timeouts, concurrency, and recovery through Karak.
+4. Run workers independently as capacity and isolation requirements grow.
+5. Schedule and inspect that same work through the shared operational model.
+
+The mental model should carry forward. The guarantees must be explicit at each
+stage: in-process work can be lost, durable work needs persisted state, and
+retries can cause duplicate execution. Engineers must understand idempotency,
+transaction boundaries, and failures between systems. A familiar API must never
+imply guarantees the selected execution mode cannot provide.
+
+No background execution or durable job system is available in Karak today.
+
+## One application from request to recovery
+
+Consider a customer report. An endpoint validates a request, saves the report
+record, and submits work. A worker loads the data and generates the report.
+The customer can inspect its status, and the same work can run every Monday.
+
+In the intended Karak experience, the endpoint, database resources, job, and
+schedule belong to one application model. The engineer can trace a failure
+back to the request, understand whether retrying is safe, and deploy with
+defined behavior for work already running.
+
+Making the database update and job submission atomic is an engineering
+requirement to design and verify. Sharing a framework alone cannot guarantee
+it. Karak's responsibility is to provide an explicit, supported way to express
+that relationship and explain its limits.
+
+## How we judge progress
+
+A feature should deepen what an engineer can do with Karak while reusing what
+they already know. Adding a wrapper around another tool is insufficient if
+engineers still have to learn and reconcile its separate configuration,
+lifecycle, and failure handling for ordinary use.
+
+We should evaluate new capabilities against the four commitments, document
+their guarantees, and verify behavior through failures and restarts. Performance
+work, including exploration of synchronous and free-threaded execution, serves
+this larger objective. Current handlers use `async def`; standard Python is
+supported today.
+
+Production readiness must be earned through reliable behavior, testing,
+documentation, and real use. Try the [HTTP quickstart](index.md) to explore the
+foundation, or [share a backend workflow](https://github.com/grandimam/karak/issues)
+that Karak should make coherent.

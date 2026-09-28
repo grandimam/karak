@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#fbfaf6">
   <title>{% if page %}{{ page.title | e }} · {% endif %}Karak</title>
   <meta name="description" content="{{ (page.meta.description if page and page.meta.description else config.site_description) | e }}">
-  {% set share_title = 'Karak — A simpler path from Python to production.' if not page or page.is_homepage else page.title ~ ' · Karak' %}
+  {% set share_title = 'Karak — Python backend development should be integrated, not assembled.' if not page or page.is_homepage else page.title ~ ' · Karak' %}
   {% set share_description = (page.meta.description if page and page.meta.description else config.site_description) %}
   {% set share_image = config.site_url.rstrip('/') ~ '/assets/share-card-sphere.png' %}
   <meta property="og:site_name" content="Karak">

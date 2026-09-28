@@ -28,6 +28,19 @@ python3 docs/check_site.py
 The generated site is in `docs/dist/`, which is ignored by Git. Commit the
 source files; GitHub Actions builds and uploads the output.
 
+## Editorial direction
+
+Lead product framing with the thesis: **Python backend development should be
+integrated, not assembled.** Explain how knowledge of Karak carries across
+HTTP, persistence, background work, scheduling, observability, and operation
+through one programming model, configuration model, lifecycle, and operational
+model. Teach backend fundamentals and make guarantees explicit.
+
+Keep practical guides focused on working features. Label planned capabilities,
+and use background work as an example of the broader thesis. The
+[thesis and direction](content/design.md) is the product reference; the
+[architecture proposal](design.md) gives contributor design criteria.
+
 ## Editing
 
 - `content/` contains the website’s Markdown pages. These are the sources for

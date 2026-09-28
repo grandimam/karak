@@ -1,5 +1,5 @@
 site_name: Karak
-site_description: A simpler path from Python to production. Documentation for the Karak Python framework.
+site_description: Python backend development should be integrated, not assembled. Learn the fundamentals. Learn Karak deeply. One coherent system to build and operate Python backends.
 site_url: https://karak.dev/
 repo_url: https://github.com/grandimam/karak
 docs_dir: content
@@ -30,4 +30,4 @@ nav:
       - Read request values: parameters.md
       - Send responses: responses.md
   - Looking ahead:
-      - Our vision: design.md
+      - Thesis and direction: design.md

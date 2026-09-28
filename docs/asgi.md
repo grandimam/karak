@@ -4,6 +4,10 @@ Karak’s main implementation is an ASGI application. It runs on Python 3.13+,
 uses async route handlers, and has no runtime dependencies. Use an ASGI server
 such as Uvicorn to serve it.
 
+This is the HTTP foundation of the [integrated backend direction](content/design.md).
+The server boundary described here is current behavior; the shared production
+lifecycle and operational model are planned.
+
 ## Run an example
 
 Save the application below as `example.py`, then run from the repository root:

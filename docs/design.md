@@ -1,1693 +1,215 @@
-# Karak — Production Goals, Design & Philosophy
+# Karak architecture: one coherent backend system
+
+> **Design proposal.** This document describes intended architecture and design
+> criteria. Today the main `karak` package provides an experimental async ASGI
+> foundation. Persistence, background work, scheduling, and integrated production
+> operation are planned. See the [ASGI guide](asgi.md) for current behavior.
 
-> **Design proposal.** These notes describe future architecture and APIs. The main `karak` package currently uses async ASGI handlers. A synchronous ASGI executor with free-threaded support remains a goal. See the [ASGI guide](asgi.md) and [documentation index](README.md) for current behavior.
+## The thesis
 
-## 1. Vision
+**Python backend development should be integrated, not assembled.**
 
-Make Python applications easier to build, run, and operate in production. Karak
-should bring APIs, background jobs, workers, and scheduled tasks into one
-application model, with consistent configuration, dependencies, lifecycle, and
-observability.
+Karak should give Python backend engineers one coherent system to learn deeply,
+build with, and operate. Engineers should learn Python and the fundamentals of
+HTTP, databases, transactions, concurrency, reliability, and distributed
+systems, then apply that knowledge through Karak. The framework should absorb
+unnecessary integration and tooling complexity around those fundamentals.
 
-The current implementation establishes the ASGI foundation. Reliable background
-work and production operations are part of the longer-term product scope.
-
-### The experience we want to deliver
-
-A developer should be able to receive a request for a customer report, queue
-the work, return promptly, and track the report through completion or failure.
-The same work should be schedulable, share the application’s services, and have
-defined behavior during retries, worker restarts, and deployments.
-
-That experience guides the implementation: complete the API workflows, build
-shared configuration and resource management, then develop durable jobs and
-scheduling with observability and shutdown behavior alongside them. These are
-planned capabilities, not guarantees provided by the current prototype.
-
-See [our vision](content/design.md) for the planned workflows and capability
-status. The rest of this document explores implementation proposals supporting
-those outcomes.
-
-### Core thesis
-
-> **A simpler path from Python to production.**
-
-The framework should help developers run ordinary Python reliably across
-request handlers and background work. Concurrent execution and parallel
-execution on free-threaded Python are tools for that goal. The execution model
-should have explicit behavior for failures, cancellation, resource cleanup, and
-shutdown.
-
-The framework should target:
-
-* Python 3.13+
-* ASGI 3
-* Free-threaded Python where available
-* Traditional GIL-enabled Python as a compatibility mode
-* HTTP APIs
-* Web applications
-* Streaming
-* WebSockets
-* Durable background jobs
-* Worker lifecycle and graceful shutdown
-* Scheduled tasks
-* Retries and failure visibility
-* Production observability
-* Middleware
-* Dependency injection
-* Validation
-* OpenAPI
-
-Start with the HTTP foundation, then extend the same application model to
-background work and production operations. Each stage should have a usable,
-well-defined scope.
-
----
-
-# 2. Product Philosophy
-
-## 2.1 Simple code should be fast code
-
-The framework should avoid requiring developers to understand:
-
-* event loops
-* coroutine scheduling
-* `await`
-* async generators
-* async context managers
-* task groups
-
-for ordinary HTTP applications.
-
-A basic endpoint should look like:
-
-```python
-@router.get("/users/{user_id}")
-def get_user(user_id: int):
-    return users.get(user_id)
-```
-
-The framework owns the execution machinery.
-
-The developer describes **what the application does**, while the framework decides **how to execute it efficiently**.
-
----
-
-# 3. Primary Design Principles
-
-## Principle 1 — Synchronous by default
-
-Application code should be ordinary Python.
-
-```python
-@router.get("/users")
-def users():
-    return repository.list_users()
-```
-
-No artificial:
-
-```python
-async def users():
-    result = await repository.list_users()
-    return result
-```
-
-unless asynchronous APIs are genuinely required.
-
----
-
-## Principle 2 — Parallelism should be explicit at the framework level
-
-The framework should internally be capable of executing independent requests concurrently and, where Python permits it, in parallel.
-
-Conceptually:
-
-```text
-                 ┌──────────────┐
-HTTP ───────────►│   Scheduler  │
-                 └──────┬───────┘
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-       Worker 1      Worker 2      Worker 3
-          │             │             │
-          ▼             ▼             ▼
-       Request A     Request B     Request C
-```
-
-On free-threaded Python:
-
-```text
-Worker 1 ── CPU ──┐
-Worker 2 ── CPU ──┼── parallel execution
-Worker 3 ── CPU ──┘
-```
-
-On GIL Python:
-
-```text
-Worker 1 ──┐
-Worker 2 ──┼── concurrent execution
-Worker 3 ──┘
-```
-
-The application programming model remains identical.
-
----
-
-# 4. The Most Important Architectural Decision
-
-Separate the framework into **three layers**.
-
-```text
-┌───────────────────────────────────────────┐
-│                  API Layer                │
-│                                           │
-│  routing / DI / validation / OpenAPI      │
-├───────────────────────────────────────────┤
-│               Execution Layer             │
-│                                           │
-│  scheduler / workers / pools / lifecycle  │
-├───────────────────────────────────────────┤
-│                Protocol Layer             │
-│                                           │
-│             ASGI / HTTP / WS              │
-└───────────────────────────────────────────┘
-```
-
-This separation is fundamental.
-
-FastAPI's conceptual center is heavily influenced by its application/API layer.
-
-Your framework's differentiator should be the **execution layer**.
-
----
-
-# 5. Framework Architecture
-
-Proposed internal architecture:
-
-```text
-                     Application
-                         │
-                         ▼
-                    Router
-                         │
-                         ▼
-                 Request Resolver
-                         │
-              ┌──────────┴──────────┐
-              │                     │
-              ▼                     ▼
-        Dependency Graph       Endpoint
-              │                     │
-              └──────────┬──────────┘
-                         ▼
-                    Executor
-                         │
-                ┌────────┴────────┐
-                │                 │
-                ▼                 ▼
-             Worker           Worker
-                │                 │
-                └────────┬────────┘
-                         ▼
-                    Response
-                         │
-                         ▼
-                       ASGI
-```
-
----
-
-# 6. Requirements
-
-## 6.1 Routing
-
-Must support:
-
-* static routes
-* path parameters
-* typed path parameters
-* query parameters
-* headers
-* cookies
-* route groups
-* route prefixes
-* HTTP methods
-* route naming
-* route metadata
-
-Example:
-
-```python
-@router.get("/users/{user_id}")
-def get_user(user_id: int):
-    ...
-```
-
-The application prepares routes during construction, after flattening all
-router and mount definitions into complete paths.
-
-Avoid performing expensive reflection or parsing on every request.
-
----
-
-# 7. Request Model
-
-Create a lightweight request object.
-
-```python
-@router.get("/users")
-def users(request: Request):
-    ...
-```
-
-The request should expose:
-
-```python
-request.method
-request.path
-request.headers
-request.query
-request.cookies
-request.body()
-request.client
-```
-
-But accessing these properties should be cheap.
-
-Do not build large abstractions over ASGI unless they provide measurable value.
-
----
-
-# 8. Response Model
-
-Responses should be extremely simple.
-
-```python
-return {"id": 1, "name": "Fauzan"}
-```
-
-The framework automatically serializes the object.
-
-Explicit responses:
-
-```python
-return Response(
-    content="hello",
-    status_code=200,
-    headers={"x-version": "1"}
-)
-```
-
-Support:
-
-* JSON
-* text
-* bytes
-* streaming
-* files
-* redirects
-* HTML
-* custom content types
-
----
-
-# 9. Serialization
-
-Serialization should be treated as a first-class performance concern.
-
-The pipeline should be:
-
-```text
-Python Object
-      │
-      ▼
-Serializer
-      │
-      ▼
-Bytes
-      │
-      ▼
-ASGI send()
-```
-
-Avoid unnecessary transformations:
-
-```text
-object
- → dict
- → JSON string
- → bytes
- → ASGI
-```
-
-Prefer:
-
-```text
-object
- → optimized serializer
- → bytes
- → ASGI
-```
-
-The framework should allow pluggable serializers.
-
----
-
-# 10. Dependency Injection
-
-Keep FastAPI's strongest idea.
-
-Example:
-
-```python
-def database():
-    return Database()
-
-
-@router.get("/users")
-def users(db: Database = Depends(database)):
-    return db.users()
-```
-
-But internally represent dependencies as a **dependency graph**.
-
-```text
-users()
- │
- ├── database()
- │
- │    └── config()
- │
- └── auth()
-      └── request()
-```
-
-Resolve the graph once where possible.
-
-Do not repeatedly inspect function signatures on every request.
-
----
-
-# 11. Dependency Execution
-
-This is where your framework can diverge significantly.
-
-Dependencies should have execution metadata.
-
-Conceptually:
-
-```python
-Dependency(
-    function=database,
-    scope="request",
-    execution="worker",
-)
-```
-
-Potential execution categories:
-
-```text
-inline
-worker
-parallel
-background
-```
-
-For example:
-
-```python
-user = Depends(load_user)
-permissions = Depends(load_permissions)
-```
-
-If they are independent:
-
-```text
-          Request
-          /     \
-         /       \
-    load_user   permissions
-         \       /
-          \     /
-         Endpoint
-```
-
-The framework could eventually execute them concurrently/parallelly.
-
-This is much more interesting than simply replacing `async` with threads.
-
----
-
-# 12. Execution Model
-
-The core abstraction should be something like:
-
-```text
-Executor
-    │
-    ├── submit()
-    ├── execute()
-    ├── map()
-    ├── parallel()
-    └── shutdown()
-```
-
-The web framework should not be tightly coupled to one executor implementation.
-
-Possible implementations:
-
-```text
-ThreadExecutor
-ProcessExecutor
-AsyncExecutor
-FreeThreadExecutor
-```
-
-Initially:
-
-```text
-Executor
-   │
-   └── ThreadPoolExecutor
-```
-
-Later:
-
-```text
-Executor
-   │
-   ├── GILThreadExecutor
-   └── FreeThreadExecutor
-```
-
----
-
-# 13. Free-Threaded Python
-
-This should be an explicit project goal.
-
-On Python builds with free-threading:
-
-```text
-                 Request Scheduler
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-       Thread 1       Thread 2       Thread 3
-          │             │             │
-       CPU work       CPU work       CPU work
-          │             │             │
-          └─────────────┼─────────────┘
-                        ▼
-                      Response
-```
-
-The framework should detect the runtime characteristics rather than requiring application developers to care.
-
-Potential API:
-
-```python
-app = App(
-    workers=8,
-    execution="auto",
-)
-```
-
-Where:
-
-```text
-execution="auto"
-       │
-       ├── free-threaded Python
-       │       → parallel workers
-       │
-       └── GIL Python
-               → concurrent workers
-```
-
----
-
-# 14. Do Not Promise "2–5x Faster"
-
-The project should not make performance claims before establishing a rigorous benchmark suite.
-
-Instead define measurable targets.
-
-For example:
-
-### Target
-
-For simple JSON endpoints:
-
-```text
-Framework overhead ≤ X μs/request
-```
-
-For IO-bound endpoints:
-
-```text
-Throughput >= FastAPI
-```
-
-For CPU-bound workloads on free-threaded Python:
-
-```text
-Scaling should approach available CPU capacity
-```
-
-For example:
-
-```text
-1 core  → 1.0x
-2 cores → ~1.8x
-4 cores → ~3.2x
-8 cores → ~5–6x
-```
-
-Actual targets should be determined empirically.
-
----
-
-# 15. Middleware
-
-Middleware should use ASGI directly where possible.
-
-```python
-@app.middleware
-def logging(request, next):
-    start = time.monotonic()
-
-    response = next(request)
-
-    log(time.monotonic() - start)
-
-    return response
-```
-
-However, this API is only conceptual.
-
-Internally, middleware must preserve ASGI compatibility.
-
-The framework should support:
-
-```text
-ASGI middleware
-+
-native framework middleware
-```
-
-This prevents ecosystem fragmentation.
-
----
-
-# 16. Lifecycle
-
-Support:
-
-```python
-@app.startup
-def startup():
-    ...
-
-
-@app.shutdown
-def shutdown():
-    ...
-```
-
-Or preferably a lifespan abstraction.
-
-Startup should initialize:
-
-* worker pools
-* database pools
-* caches
-* application resources
-
-Shutdown should:
-
-1. stop accepting requests
-2. finish active requests
-3. drain queues
-4. execute shutdown hooks
-5. terminate workers
-
----
-
-# 17. Error Handling
-
-Exceptions should have a predictable pipeline.
-
-```text
-Endpoint
-   │
-   ▼
-Exception
-   │
-   ▼
-Exception Resolver
-   │
-   ├── HTTPException
-   ├── ValidationError
-   ├── ApplicationError
-   └── UnknownError
-   │
-   ▼
-Response
-```
-
-Development:
-
-```text
-rich traceback
-```
-
-Production:
-
-```json
-{
-    "detail": "Internal Server Error"
-}
-```
-
-Never leak internal exception information by default.
-
----
-
-# 18. Validation
-
-Use Python typing as the primary interface.
-
-```python
-@router.get("/users/{user_id}")
-def get_user(user_id: int):
-    ...
-```
-
-The framework should understand:
-
-```text
-int
-str
-float
-bool
-list[T]
-dict[K, V]
-Optional[T]
-Union
-Literal
-Enum
-dataclasses
-```
-
-Pydantic compatibility should be considered important because it is part of the FastAPI ecosystem.
-
-But do not make the entire framework architecturally dependent on Pydantic.
-
----
-
-# 19. OpenAPI
-
-OpenAPI should be generated from the same internal representation used by routing and validation.
-
-Do not build OpenAPI as a separate reflection system.
-
-Use:
-
-```text
-Route Definition
-       │
-       ├── Runtime Resolver
-       │
-       ├── Validation
-       │
-       └── OpenAPI Generator
-```
-
-This gives you a single source of truth.
-
----
-
-# 20. WebSockets
-
-WebSockets should be supported, but not allowed to distort the HTTP execution architecture.
-
-```python
-@app.websocket("/chat")
-def chat(socket):
-    while True:
-        message = socket.receive()
-        socket.send(...)
-```
-
-Internally, WebSockets may use a different execution strategy because they are long-lived connections.
-
----
-
-# 21. Streaming
-
-Streaming must be first-class.
-
-Example:
-
-```python
-@router.get("/stream")
-def stream():
-    return Stream(generator())
-```
-
-The framework must avoid buffering the entire response.
-
-Pipeline:
-
-```text
-Generator
-   │
-   ▼
-Chunk
-   │
-   ▼
-ASGI send()
-   │
-   ▼
-Network
-```
-
----
-
-# 22. Background Tasks
-
-Background work is part of Karak’s intended application model. Short-lived
-in-process tasks and durable jobs need different execution guarantees.
-
-For Karak to cover work commonly handled by Celery, the design must address job
-persistence, delivery semantics, retries, timeouts, scheduling, worker shutdown,
-and visibility into failures. Running a function in a thread pool alone does
-not provide those guarantees. These capabilities are future work; neither
-current implementation provides a durable task queue.
-
-The following API sketch explores in-process background work:
-
-```python
-@router.post("/users")
-def create_user(background: Background):
-    background.submit(send_email)
-    return {"created": True}
-```
-
-Initially:
-
-```text
-Background
-    ↓
-Thread pool
-```
-
-Eventually:
-
-```text
-Background Executor
-    ├── thread
-    ├── process
-    └── distributed executor
-```
-
----
-
-# 23. Configuration
-
-Configuration should be explicit and boring.
-
-Example:
-
-```python
-app = App(
-    workers=8,
-    debug=False,
-    docs=True,
-)
-```
-
-Server configuration should remain separate:
-
-```bash
-karak app:app --workers 8
-```
-
-Do not mix application configuration with deployment configuration.
-
----
-
-# 24. ASGI Compatibility
-
-This is non-negotiable.
-
-The framework must expose:
-
-```python
-app(scope, receive, send)
-```
-
-and work with existing ASGI servers.
-
-The framework should be usable with:
-
-* Uvicorn
-* Hypercorn
-* Daphne
-* other ASGI servers
-
-Eventually, a dedicated server may be developed, but **do not start there**.
-
-The framework should first prove that its execution model works independently of the network server.
-
----
-
-# 25. Package Architecture
-
-A possible package structure:
-
-```text
-karak/
-│
-├── app.py
-├── routing/
-│   ├── router.py
-│   ├── route.py
-│   └── matcher.py
-│
-├── request/
-│   ├── request.py
-│   └── headers.py
-│
-├── response/
-│   ├── response.py
-│   ├── json.py
-│   └── streaming.py
-│
-├── dependencies/
-│   ├── graph.py
-│   ├── resolver.py
-│   └── dependency.py
-│
-├── execution/
-│   ├── executor.py
-│   ├── scheduler.py
-│   ├── worker.py
-│   └── pool.py
-│
-├── middleware/
-│
-├── validation/
-│
-├── serialization/
-│
-├── websocket/
-│
-├── lifespan/
-│
-└── openapi/
-```
-
----
-
-# 26. Internal Request Pipeline
-
-The complete request lifecycle should look approximately like:
-
-```text
-             ASGI
-               │
-               ▼
-        ┌──────────────┐
-        │ HTTP Parser  │
-        └──────┬───────┘
-               │
-               ▼
-            Router
-               │
-               ▼
-        Route Resolution
-               │
-               ▼
-       Parameter Binding
-               │
-               ▼
-      Dependency Resolution
-               │
-               ▼
-          Executor
-               │
-               ▼
-           Endpoint
-               │
-               ▼
-         Serialization
-               │
-               ▼
-          Response
-               │
-               ▼
-             ASGI
-```
-
-The critical optimization principle:
-
-> **Prepare routing metadata during application construction so requests can use it directly.**
-
----
-
-# 27. Application Construction
-
-When:
-
-```python
-app = Karak(routes=[router])
-```
-
-is created, Karak flattens router definitions and creates executable HTTP
-routes. Each handler is inspected against its complete path. Future dependency
-and serialization metadata could be prepared at this same construction boundary.
-
-Conceptually:
-
-```text
-Python Functions
-       │
-       ▼
-Application Graph
-       │
-       ▼
-Compiled Routes
-       │
-       ▼
-Compiled Dependency Graphs
-       │
-       ▼
-Compiled Parameter Resolvers
-       │
-       ▼
-Compiled Serialization Metadata
-```
-
-Then request execution becomes mostly:
-
-```text
-lookup
-→ bind
-→ execute
-→ serialize
-→ send
-```
-
-rather than repeatedly doing:
-
-```text
-inspect
-→ introspect
-→ build
-→ resolve
-→ execute
-```
-
----
-
-# 28. Philosophy Around Python Introspection
-
-Python's introspection capabilities are powerful, but they should be used primarily at **application construction time**.
-
-For example:
-
-```python
-inspect.signature(endpoint)
-```
-
-is perfectly reasonable during startup.
-
-Doing it for every request is not.
-
-The framework should aggressively separate:
-
-```text
-cold path
-```
-
-from:
-
-```text
-hot path
-```
-
----
-
-# 29. Hot Path Philosophy
-
-The hot path should be brutally small.
-
-Ideal conceptual pipeline:
-
-```text
-request
-  ↓
-route lookup
-  ↓
-argument extraction
-  ↓
-dependency execution
-  ↓
-endpoint
-  ↓
-serialization
-  ↓
-send
-```
-
-Avoid:
-
-* repeated reflection
-* unnecessary allocations
-* unnecessary dictionaries
-* repeated string parsing
-* repeated validation metadata construction
-* unnecessary object wrapping
-
----
-
-# 30. Memory Philosophy
-
-Performance is not only CPU.
-
-Measure:
-
-* allocations/request
-* memory/request
-* GC pressure
-* object lifetime
-* queue depth
-* context switching
-
-A framework that is 5% faster but allocates 3× more objects is not necessarily better.
-
----
-
-# 31. Concurrency Philosophy
-
-Do not advertise:
-
-> "Threads are faster than async."
-
-That is too simplistic.
-
-Instead:
-
-> **Concurrency and parallelism are execution strategies. The framework should choose the appropriate strategy without forcing application code to encode it.**
-
-For IO-heavy workloads:
-
-```text
-Concurrency
-```
-
-For CPU-heavy workloads on free-threaded Python:
-
-```text
-Parallelism
-```
-
-The framework should provide one application model over both.
-
----
-
-# 32. Explicit Escape Hatch
-
-Advanced users should be able to control execution.
-
-For example:
-
-```python
-@router.get("/cpu-intensive")
-@parallel
-def compute():
-    ...
-```
-
-or:
-
-```python
-@router.get("/io-intensive")
-@concurrent
-def fetch():
-    ...
-```
-
-But these should be **advanced features**, not requirements for normal applications.
-
----
-
-# 33. Thread Safety
-
-This becomes one of the most important areas of the project.
-
-Free-threaded Python changes assumptions around shared mutable state.
-
-The framework must clearly document:
-
-```text
-request-local state
-application-global state
-worker-local state
-shared state
-```
-
-Potential primitives:
-
-```python
-RequestState
-ApplicationState
-WorkerState
-```
-
-Avoid implicit global mutable state.
-
----
-
-# 34. Context Propagation
-
-Request context must propagate correctly across worker boundaries.
-
-For example:
-
-```python
-request_id
-trace_id
-user
-locale
-```
-
-should remain available to:
-
-```text
-endpoint
-→ dependency
-→ middleware
-→ logger
-→ background task
-```
-
-Use `contextvars` where appropriate, but carefully test behavior under thread execution.
-
----
-
-# 35. Observability
-
-Build instrumentation hooks into the core.
-
-Expose:
-
-```text
-request duration
-route
-status
-worker
-queue time
-execution time
-serialization time
-```
-
-Eventually:
-
-```text
-OpenTelemetry
-Prometheus
-structured logging
-```
-
-A framework should make performance debugging possible rather than merely claiming performance.
-
----
-
-# 36. Testing Requirements
-
-The framework needs several test layers.
-
-### Unit tests
-
-```text
-router
-dependency graph
-validation
-serialization
-executor
-middleware
-```
-
-### Integration tests
-
-```text
-ASGI
-HTTP
-WebSocket
-lifespan
-streaming
-```
-
-### Compatibility tests
-
-Run the framework against:
-
-```text
-Uvicorn
-Hypercorn
-```
-
-### Stress tests
-
-Measure:
-
-```text
-RPS
-latency
-p50
-p95
-p99
-CPU
-memory
-allocations
-```
-
-### Parallelism tests
-
-Especially:
-
-```text
-1 worker
-2 workers
-4 workers
-8 workers
-16 workers
-```
-
-on free-threaded Python.
-
----
-
-# 37. Benchmark Suite
-
-Create a separate benchmark repository/directory.
-
-At minimum:
-
-```text
-/plaintext
-/json
-/path-param
-/query-param
-/validation
-/dependency
-/database
-/cpu
-/streaming
-```
-
-Compare against:
-
-```text
-FastAPI
-Starlette
-Flask
-Litestar
-```
-
-The goal is not to win every benchmark.
-
-The goal is to understand:
-
-> **Where does the framework spend its time?**
-
----
-
-# 38. Compatibility Goal
-
-The first major milestone should be:
-
-```text
-FastAPI-like developer experience
-+
-ASGI compatibility
-+
-competitive performance
-```
-
-Not:
-
-```text
-completely new web programming paradigm
-```
-
-You need adoption before radicalism becomes useful.
-
----
-
-# 39. API Design
-
-The public API should feel familiar.
-
-Example:
-
-```python
-from karak import App
-
-app = App()
-
-
-@router.get("/hello")
-def hello():
-    return {"message": "hello"}
-```
-
-Typed parameters:
-
-```python
-@router.get("/users/{user_id}")
-def get_user(user_id: int):
-    return repository.get(user_id)
-```
-
-Request:
-
-```python
-@router.post("/users")
-def create_user(user: User):
-    return repository.create(user)
-```
-
-Dependency:
-
-```python
-@router.get("/users")
-def users(db: Database = Depends(get_database)):
-    return db.users()
-```
-
-The developer should immediately understand the framework if they know FastAPI.
-
----
-
-# 40. What NOT to Build Initially
-
-Do not initially build:
-
-* custom HTTP server
-* custom HTTP parser
-* ORM
-* authentication framework
-* task queue
-* distributed scheduler
-* frontend framework
-* template engine
-* CLI deployment platform
-* cloud platform
-* custom JSON implementation
-* custom database layer
-
-Durable jobs and scheduling belong to the broader product scope, but they are
-deferred until their execution and reliability guarantees can be designed and
-tested. The other systems listed above remain outside the initial scope.
-
-First build the **execution engine** and application lifecycle.
-
----
-
-# 41. MVP
-
-The first version should contain only:
-
-```text
-1. ASGI application
-2. Router
-3. Path parameters
-4. Query parameters
-5. JSON responses
-6. Request object
-7. Dependency injection
-8. Basic validation
-9. Middleware
-10. Lifespan
-11. Thread-based executor
-12. Benchmark suite
-```
-
-That is enough to establish whether the core thesis works.
-
----
-
-# 42. Version 0.1
-
-The first release should answer one question:
-
-> **Can we build an ergonomic synchronous ASGI framework whose execution model provides excellent concurrency and a credible path to true parallelism?**
-
-Do not attempt to answer anything else.
-
----
-
-# 43. Version 0.2
-
-Add:
-
-```text
-OpenAPI
-Pydantic integration
-streaming
-WebSockets
-background tasks
-structured errors
-observability
-```
-
----
-
-# 44. Version 0.3
-
-Focus heavily on:
-
-```text
-free-threaded Python
-```
-
-Measure:
-
-```text
-CPU scaling
-request scaling
-dependency scaling
-serialization scaling
-```
-
-This is where the framework begins to become technically distinctive.
-
----
-
-# 45. Version 1.0
-
-The framework should only call itself production-ready when:
-
-```text
-ASGI compatible
-Stable API
-Excellent test coverage
-Predictable lifecycle
-Production observability
-OpenAPI
-WebSockets
-Streaming
-Validation
-Security primitives
-Graceful shutdown
-Performance benchmarks
-Free-threaded support
-GIL compatibility
-```
-
----
-
-# 46. The Strategic Positioning
-
-> **A simpler path from Python to production.**
-
-Karak aims to make APIs, background jobs, workers, and scheduled tasks easier
-to build, run, and operate together in Python.
-
-The product promise is a consistent application model and less operational
-assembly for developers: shared configuration, dependencies, lifecycle,
-failure handling, and observability. Production readiness must be demonstrated
-through explicit guarantees and validation as each capability is implemented.
-
-ASGI support and planned free-threaded execution serve that promise. The ASGI
-framework is the current foundation. Durable background jobs and scheduling
-remain future work.
-
----
-
-# 47. The Deeper Idea
-
-The really interesting abstraction is not:
-
-```text
-async vs sync
-```
-
-It is:
-
-```text
-WHAT
- │
- ▼
-Application semantics
- │
- ▼
-WHERE
- │
- ▼
-Execution strategy
-```
-
-The developer writes:
-
-```python
-def process_order(order):
-    ...
-```
-
-The framework decides whether the work should execute:
-
-```text
-inline
-thread
-parallel thread
-process
-async task
-```
-
-depending on the execution environment and workload.
-
-That is the long-term architectural bet.
-
----
-
-# 48. Project North Star
-
-The project should ultimately aim for this:
-
-```text
-                    Python Application
-                           │
-                           ▼
-                     Framework API
-                           │
-                           ▼
-                   Execution Planner
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-       Concurrent       Parallel        Background
-          │                │                │
-          ▼                ▼                ▼
-        Threads       Free Threads       Workers
-          │                │                │
-          └────────────────┼────────────────┘
-                           ▼
-                          ASGI
-```
-
-The framework should become an **application and execution model for Python
-services**, spanning HTTP APIs and background work. The diagram above sketches
-the HTTP execution path; durable workers also need their own job transport,
-persistence, lifecycle, and failure semantics.
-
----
-
-# 49. First Engineering Milestone
-
-Before writing the router, validation system, or OpenAPI generator, prove this:
-
-```python
-@router.get("/compute")
-def compute():
-    return expensive_cpu_work()
-```
-
-Run:
-
-```text
-1 worker
-2 workers
-4 workers
-8 workers
-```
-
-on free-threaded Python.
-
-Then compare:
-
-```text
-throughput
-latency
-CPU utilization
-scaling efficiency
-```
-
-If the execution model does not scale, everything else is secondary.
-
-If it does scale, you have the foundation for a genuinely differentiated framework.
-
----
-
-# 50. Recommended Development Order
-
-```text
-Phase 1
-ASGI fundamentals
-       ↓
-Phase 2
-Execution engine
-       ↓
-Phase 3
-Router
-       ↓
-Phase 4
-Request/Response
-       ↓
-Phase 5
-Dependency injection
-       ↓
-Phase 6
-Validation
-       ↓
-Phase 7
-Serialization
-       ↓
-Phase 8
-Middleware + lifespan
-       ↓
-Phase 9
-OpenAPI
-       ↓
-Phase 10
-Free-threaded optimization
-       ↓
-Phase 11
-Benchmarking
-       ↓
-Phase 12
-Production hardening
-```
-
-The important part is that **the execution engine comes before the framework features**.
-
-That is where the project's intellectual property and architectural differentiation should live.
+The product ambition is to make “Karak engineer” meaningful. Architecture
+choices should support that ambition across the production backend:
+
+**HTTP → persistence → background work → scheduling → observability → operation**
+
+The [public thesis and direction](content/design.md) describes the intended
+experience. This document establishes how contributors should evaluate designs
+that make it possible. It supersedes the earlier execution-centered roadmap;
+synchronous and free-threaded execution remain possibilities within the broader
+system, rather than the test of the product thesis.
+
+## Four architectural commitments
+
+| Commitment | Design responsibility |
+| --- | --- |
+| One programming model | Use consistent Python interfaces for application definitions, resources, requests, and work. New capabilities should extend concepts an engineer already knows. |
+| One configuration model | Define consistent setting names, validation, overrides, and error reporting across process roles. |
+| One lifecycle | Define who owns resources, when they are acquired and released, and how startup, cancellation, failure, and shutdown behave. |
+| One operational model | Provide consistent ways to run, inspect, diagnose, deploy, and recover requests, jobs, and schedules. |
+
+These are commitments for the planned system. Current lifespan handling only
+acknowledges startup and shutdown; it does not implement resource management.
+
+Integration does not require implementing every underlying component ourselves.
+ASGI servers, database drivers, and other infrastructure can sit behind explicit
+boundaries. Karak should own supported integration paths and their behavior.
+For normal application work, engineers should not have to reconcile independent
+configuration systems and lifecycles themselves.
+
+A single application model can span multiple processes and machines. Shared
+configuration does not imply shared memory, and a consistent lifecycle does
+not imply that every process starts or stops simultaneously.
+
+## Architecture boundaries
+
+The proposed responsibilities are:
+
+| Boundary | Responsibility |
+| --- | --- |
+| Application definition | Routes, work definitions, schedules, settings, and resource declarations |
+| Protocol handling | ASGI request and response handling, with protocol-specific behavior kept explicit |
+| Resource and persistence management | Database connections, transaction scopes, migrations, and cleanup |
+| Execution | Dispatch, concurrency limits, cancellation, timeouts, and worker ownership |
+| Durable work and scheduling | Persisted job state, claiming work, retry policy, recovery, and schedule decisions |
+| Observability and operation | Connected context, health, inspection, process control, and deployment behavior |
+
+These are internal boundaries within one product. Each subsystem must carry the
+same application identity, configuration conventions, and lifecycle contracts.
+The exact module layout and public APIs remain open design decisions.
+
+## HTTP foundation
+
+The current implementation establishes ASGI handling, router composition, typed
+path and query inputs, validation, and text or byte responses. It prepares
+routes and inspects handler signatures during application construction.
+
+Planned HTTP work includes structured bodies and responses, shared resources,
+middleware interfaces, and generated API documentation. Routing, validation,
+and API documentation should derive from the same definitions so their behavior
+cannot drift. Protocol features such as streaming and WebSockets need explicit
+resource and cancellation behavior when introduced.
+
+Keep protocol compatibility and errors understandable. Validate inputs before
+calling application code, avoid repeating reflection for each request, and
+avoid exposing internal exception details in production responses.
+
+## Persistence and resource ownership
+
+Persistence belongs in the application model because transactions and schema
+changes affect requests, workers, and deployments together. A persistence design
+should cover:
+
+- Resource acquisition, pooling, scope, and cleanup across process roles.
+- Explicit transaction boundaries, commit and rollback behavior, and failures.
+- Schema migrations and compatibility with running application versions.
+- A supported relationship between application writes and durable job submission.
+
+Database APIs, migration interfaces, and the need for an ORM are undecided.
+Owning the persistence experience does not commit Karak to a custom database
+engine or to hiding SQL and transaction concepts.
+
+Dependencies should have explicit scopes. Request-scoped state must not silently
+outlive its request or be passed to another process. A worker must acquire its
+own resources under the same application rules. Any future dependency graph
+should be prepared where possible and must respect declared resource ownership.
+
+## Background work: preserve the model as guarantees grow
+
+The intended progression is simple background execution, durable execution,
+then distributed workers and scheduled work. Engineers should keep familiar
+work definitions, configuration conventions, resource rules, and inspection
+concepts throughout that progression.
+
+Each mode needs a clear contract. Before exposing a mode, define and verify:
+
+| Concern | Required design decision |
+| --- | --- |
+| Submission | When work is accepted, and what survives process failure |
+| Transactions | Whether application writes and submission can commit atomically, and under which conditions |
+| Delivery | When duplicate execution is possible and what application idempotency is required |
+| Retries | Eligible failures, limits, delays, and how attempts are recorded |
+| Ownership | How workers claim work and recover abandoned claims |
+| Cancellation and timeouts | What can be interrupted and what happens to external side effects |
+| Capacity | Concurrency limits, queue pressure, and resource isolation |
+| Compatibility | How persisted inputs and work definitions behave across deployments |
+| Results | Retention, status, failure history, and inspection |
+
+A familiar interface must not conceal a change in reliability guarantees.
+Moving work to another process also introduces serialization and resource
+boundaries; these must be visible and documented.
+
+A queue stored in the application's database, with PostgreSQL as an initial
+candidate, is a proposed integration strategy. It could support transactional
+submission and reduce the need for a separate broker. This is not an implemented
+storage contract. Contention, polling or notification, claiming, recovery,
+retention, and capacity must be evaluated before choosing it.
+
+Replacing Celery or eliminating a broker can be a consequence of the design.
+The product objective is a coherent backend experience across capabilities.
+
+## Scheduling
+
+Schedules should invoke the same work definitions and use the same resources,
+configuration, retry policies, and operational interfaces as on-demand work.
+
+A scheduling design must define time zones, missed runs, overlapping runs,
+duplicate triggers, coordination between schedulers, and how schedule changes
+interact with work already submitted. Engineers should be able to inspect why
+a run happened or was skipped. Scheduling has no implementation today.
+
+## Observability and operation
+
+Observability should grow alongside each capability. Requests, database work,
+job submissions, attempts, and scheduled runs need connected context so an
+engineer can follow a single application operation across process boundaries.
+Logs, metrics, health information, and failure inspection should use consistent
+terms and identifiers.
+
+Operation should cover process roles, configuration, startup readiness,
+deployment, graceful shutdown, and recovery. Shutdown contracts must explain
+when a process stops accepting work, how long active work may finish, what
+happens when that deadline expires, and how resources are released. Durable
+queued work must have a defined recovery path.
+
+A deployment model must account for schema changes and old and new workers
+running together. Hosting environments, commands, dashboards, and integration
+interfaces remain to be designed. One operational model does not remove the
+engineer's responsibility for capacity, database backups, or incident response.
+
+## Execution serves the application model
+
+Current route handlers use `async def` on standard Python 3.13+. Synchronous
+handlers and free-threaded execution are future exploration areas. Thread,
+process, and async execution strategies should be evaluated against application
+semantics and lifecycle requirements.
+
+Concurrency, parallelism, thread safety, blocking calls, cancellation, and
+resource isolation remain engineering concepts users must understand. Karak
+should provide clear controls and defaults for applying them. It must not
+silently move work between execution strategies when doing so changes behavior.
+
+Performance claims require measurements. Benchmark framework overhead, I/O
+workloads, CPU workloads where relevant, and behavior under overload. A faster
+executor is useful when it supports reliable application behavior and the
+shared model.
+
+## Development direction
+
+The progression describes expanding responsibility, not fixed release numbers:
+
+1. Strengthen the existing HTTP foundation and its documented behavior.
+2. Establish shared configuration, resource ownership, and lifecycle contracts.
+3. Bring persistence, transaction handling, and migrations into that model.
+4. Introduce background execution with explicit guarantees, then durable work
+   and independent workers using the same concepts.
+5. Add scheduling over the established work model.
+6. Deepen observability and operation across the whole system.
+
+Observability, diagnostics, shutdown behavior, and validation belong in every
+stage. Existing HTTP features are a foundation; they do not yet demonstrate the
+full thesis or production readiness. Release scope should follow verified
+capabilities rather than the earlier speculative version roadmap.
+
+## Review criteria
+
+For each proposed capability, contributors should explain:
+
+- Which backend concept it lets an engineer apply and which integration burden
+  Karak takes responsibility for.
+- How it reuses the programming, configuration, lifecycle, and operational models.
+- What guarantees it provides and what happens during failure, restart, and upgrade.
+- Which choices remain explicit and which underlying tools users must understand.
+- How its behavior will be verified and taught through a complete application workflow.
+
+Production readiness requires demonstrated reliability, stable documented
+contracts, appropriate security behavior, and operational experience. The
+standard is whether deep knowledge of Karak and backend fundamentals lets an
+engineer confidently build and operate the supported system.

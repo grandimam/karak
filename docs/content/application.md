@@ -73,7 +73,8 @@ cause. See [send responses](responses.md#understand-error-responses) for more.
 Karak is currently for local experimentation and development. The framework
 is not production-ready, and `--reload` is a development convenience.
 
-A production experience that covers configuration, resource setup, worker
-management, visibility into failures, and graceful shutdown is part of
-[what we plan to build](design.md). There is no Karak deployment command or
-managed background-job system to use yet.
+The intended [operational model](design.md) spans HTTP, persistence, background
+work, and schedules with consistent configuration, resource ownership,
+inspection, and shutdown. Today's explicit Uvicorn command is how you run the
+HTTP foundation while that integrated experience is being built. There is no
+Karak deployment command or managed background-job system to use yet.

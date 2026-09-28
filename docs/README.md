@@ -1,8 +1,14 @@
 # Karak documentation
 
-Start with a small application, then learn to accept requests and send useful
-responses. These guides describe what you can try today. Karak is experimental;
-background jobs, scheduling, and production operations are still planned.
+**Python backend development should be integrated, not assembled.** Karak is
+being built as one coherent system for engineers who know Python and backend
+fundamentals and want to learn one system deeply.
+
+The direction spans HTTP, persistence, background work, scheduling,
+observability, and operation, with one programming model, one configuration
+model, one lifecycle, and one operational model. Today Karak is experimental
+and provides the HTTP foundation. The practical guides describe that working
+foundation; the broader production experience is planned.
 
 ## Get started
 
@@ -18,9 +24,9 @@ background jobs, scheduling, and production operations are still planned.
 
 ## Look ahead
 
-[Our vision](content/design.md) describes the application experience we want to
-build: APIs, durable background jobs, workers, recurring work, and the tools to
-operate them together. It distinguishes current capabilities from future plans.
+[Thesis and direction](content/design.md) explains the integrated backend
+experience and the path from simple background execution to durable distributed
+work within one mental model. It distinguishes current capabilities from plans.
 
 ## Work on Karak
 
@@ -32,8 +38,7 @@ Design proposals may contain APIs that do not exist yet.
 | [ASGI implementation guide](asgi.md) | Current API details and boundaries |
 | [Request handling](server.md) | How the implementation handles requests |
 | [Load testing](load-testing.md) | Measuring the ASGI demo |
-| [Production goals and execution design](design.md) | Architecture proposals behind the product direction |
-| [Framework design](framework.md) | Resource routing and dependency proposals |
+| [Architecture and design principles](design.md) | Shared models, capability boundaries, and criteria for the integrated backend |
 | [Routing notes](../notes/route.md) | Early route and validation ideas |
 | [Server notes](../notes/server.md) | Server and router exploration |
 | [Worker notes](../notes/workers.md) | Background-task ideas |
