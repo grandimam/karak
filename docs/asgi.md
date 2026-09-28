@@ -94,7 +94,8 @@ become visible. No route processing takes place during lifespan startup.
 
 Return text, bytes, or a `Response`. Text is encoded as UTF-8, and a `Response`
 lets you set the status code. Return `b""` when an empty body is required.
-Automatic JSON serialization and custom response headers are not implemented.
+Response headers and cookie helpers are supported; see
+[send responses](content/responses.md). Automatic JSON serialization is not implemented.
 
 Validation failures produce a text response with HTTP 422. Unhandled handler
 exceptions are logged through `karak.errors` and produce HTTP 500 with
@@ -105,9 +106,11 @@ exceptions are logged through `karak.errors` and produce HTTP 500 with
 The application accepts a `lifespan=` async context manager for startup and
 shutdown. Register `@resource` factories through `resources=[...]`; resource
 factories declare dependencies with `ResourceContext[T]` and access their values
-through `.value`. Handlers access initialized resources through `.get()` on a
-resource handle. See [application resources](content/resources.md).
-Automatic request body binding, injected `Request` parameters, WebSockets, and a synchronous
+through `.value`. Handlers use the same `ResourceContext[T]` convention, or `.get()`
+on a resource handle. `ResourceContext[Request]` supplies the current request
+without a registered factory. See [application resources](content/resources.md)
+and [request context](content/request-context.md).
+Automatic request body binding, WebSockets, and a synchronous
 handler executor are also not implemented.
 
 Routing remains a prototype: an unmatched path currently returns HTTP 500.

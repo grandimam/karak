@@ -221,13 +221,39 @@ GET endpoints and `router.post` for POST endpoints. JSON responses are planned.
 
 [Read the response guide →](docs/content/responses.md)
 
-## Define endpoints on one router
+## Organize endpoints with routers
 
 Declare each endpoint's full path with `@router.get(path)` or
 `@router.post(path)`, then pass the router to `Karak(router=router)`.
 The application builds and validates its routes during construction.
+Give each module its own router and combine them with `router.include(child)`.
 
 [See the routing guide →](docs/content/routing.md)
+
+## Read request context
+
+Use the same `ResourceContext[T]` convention in handlers and resource factories.
+`ResourceContext[Request]` provides the current request without a factory:
+
+```python
+from karak import Request
+from karak import ResourceContext
+
+
+@router.get("/preferences")
+async def preferences(context: ResourceContext[Request]):
+    return context.value.cookies.get("theme", "light")
+```
+
+Register this endpoint before constructing the application. Request headers,
+cookies, body bytes, and isolated state live on `context.value`. Registered
+application services are available through `ResourceContext[ServiceType]`.
+
+[Follow the complete request guide →](docs/content/request-context.md)
+
+New to backend development? [Your first week](docs/content/first-week.md) builds
+from a working endpoint to a modular, tested local application, with daily
+checkpoints and an explanation of the remaining work for production.
 
 ## Where we are
 
@@ -237,7 +263,7 @@ lifecycle, and operational models.
 
 | Area | Today | Direction |
 | :--- | :--- | :--- |
-| **HTTP** | ASGI, router decorators, typed inputs, validation, text and bytes, shared resource handles | JSON, generated API documentation |
+| **HTTP** | ASGI, composed routers, typed inputs, request and resource contexts, headers, cookies, text and bytes | JSON, generated API documentation |
 | **Application lifecycle** | Typed resource dependencies, automatic setup and cleanup, optional `lifespan=` hook | Graceful shutdown coordination |
 | **Persistence** | Planned | Database resources, explicit transactions, and migrations within the application model |
 | **Background work** | Planned | A path from simple execution to durable distributed jobs, retries, and failure recovery |

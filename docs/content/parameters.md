@@ -7,6 +7,11 @@ description: Accept filters, page numbers, and repeated values, with useful defa
 
 <p class="lead">Use Python types and defaults to describe a request.</p>
 
+This page covers path and query values. To read headers, cookies, or body bytes,
+add a `ResourceContext[Request]` parameter as shown in
+[request context](request-context.md). Context parameters are supplied by Karak
+and are not converted from URL values.
+
 Suppose you want a user endpoint with a page number and an active-user filter.
 Add it to your router before constructing the application:
 

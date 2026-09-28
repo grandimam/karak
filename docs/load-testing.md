@@ -106,9 +106,9 @@ Run these separately so results stay interpretable:
 4. valid input vs a validation failure, recording expected HTTP 422 responses separately
 5. one process vs multiple `uvicorn` workers
 
-The current ASGI route API does not inject `Request` or bind request bodies.
-`Request.json()` is not implemented. Body-parsing benchmarks require a separate
-ASGI harness or future framework support.
+Handlers can receive `ResourceContext[Request]` and read cached body bytes with
+`await context.value.body()`. Automatic body binding and `Request.json()` are
+not implemented. Body-parsing benchmarks must explicitly parse these bytes.
 
 ## 7. Important caveat for this repo
 

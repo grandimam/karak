@@ -29,7 +29,7 @@ reads the handler signature, validates all path placeholders, and selects
 converters. The original definitions remain reusable and editable.
 
 During a request, `Karak._dispatch` checks its routes in order. The matching `Route`
-builds handler arguments from path and query values, awaits the handler, and
+builds handler arguments from path and query values and resource contexts, awaits the handler, and
 sends its result through a `Response`. No route construction or handler inspection
 runs during requests or lifespan startup.
 
@@ -37,9 +37,10 @@ See the [ASGI guide](asgi.md) for runnable examples and routing limitations.
 
 ## Request object
 
-`Request` is a low-level wrapper around the ASGI scope and receive callable.
-It is used internally by `Route` and is exported for code that works directly
-with ASGI:
+`Karak._http` creates one `Request` around a copy of the HTTP scope and its
+receive callable, before dispatch. It is stored under the internal
+`karak.request` scope key. Route handlers receive it through
+`ResourceContext[Request]`. Code working directly with ASGI can also construct it:
 
 ```python
 from karak import Request
@@ -53,16 +54,20 @@ async def inspect_request(scope, receive):
 `params` maps query keys to lists of strings and preserves blank values.
 `body()` consumes request messages and joins their body chunks into bytes; it
 raises `RuntimeError` if the client disconnects while the body is being read.
-The body is not cached, so read it once and retain the result if needed.
+The body is cached, including empty bodies, with a lock around concurrent reads.
+Headers preserve repeated fields and provide case-insensitive lookup. Cookies
+are parsed from all incoming Cookie fields. `request.state` is a fresh dictionary
+per request, separate from ASGI lifespan state.
 
-There is no `Request.json()` method or automatic `Request` injection into route
-handlers in the current ASGI implementation.
+There is no `Request.json()` method. Injection uses `ResourceContext[Request]`,
+not a bare `Request` annotation. See the [request guide](content/request-context.md).
 
 ## Response and lifecycle
 
-`Response` sends `http.response.start` with the status code, followed by
+`Response` sends `http.response.start` with the status code and header pairs, followed by
 `http.response.body`. Ordinary text results are encoded as UTF-8; bytes can be
-returned directly. The default status is 200.
+returned directly. The default status is 200. Mutable headers and cookie helpers
+preserve separate Set-Cookie fields; empty content sends `b""`.
 
 For lifespan scopes, the application enters the optional `lifespan=` async context
 manager before acknowledging startup and exits it before acknowledging shutdown.

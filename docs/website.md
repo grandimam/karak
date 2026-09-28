@@ -30,14 +30,16 @@ source files; GitHub Actions builds and uploads the output.
 
 ## Editorial direction
 
-The website has one [mission page](content/design.md). Keep the thesis, product
-direction, and planned capabilities there. Every other published page should help
-users build with Karak today: provide working examples, commands, expected
-results, and useful explanations of errors and limits.
+The website teaches beginners how to build Python backends, working toward
+production application skills. The [first-week path](content/first-week.md)
+provides a suggested sequence and practical checkpoints. Keep detailed future
+plans in the [mission page](content/design.md), and distinguish those plans from
+features that work today. Guides should provide working examples, commands,
+expected results, and useful explanations of errors and limits.
 
 Lead the homepage with the quickstart. Organize navigation by tasks such as
-defining routes, accepting inputs, and sharing resources. Avoid repeating mission
-language in guide introductions, metadata, or the shared theme. The separate
+defining routes, accepting inputs, and sharing resources. Explain unfamiliar
+terms when they first appear, and introduce one new concept at a time. The separate
 [architecture proposal](design.md) remains a contributor reference outside the
 published website.
 
