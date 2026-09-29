@@ -10,7 +10,7 @@ description: Register resources, declare typed dependencies with ResourceContext
 
 An application resource is an object that lives while your application is running:
 a database pool, a client, a cache, or a service. Decorate its factory with
-`@resource` and register the resulting handle with `Karak(resources=[...])`.
+`@resource` to register it globally. Construct the application with `Karak(router=router)`.
 
 The example below keeps everything in one file so you can run it immediately.
 In a larger application, put factories in `app/resources.py`, feature behavior
@@ -78,7 +78,7 @@ async def product(product_id: int, service: ResourceContext[ProductService]):
     return service.value.name_for(product_id)
 
 
-app = Karak(router=router, resources=[products, catalog])
+app = Karak(router=router)
 ```
 
 Start the server:
@@ -94,8 +94,8 @@ curl http://127.0.0.1:8000/products/1
 ```
 
 The response is `Tea`. Both resources are initialized before the server starts
-accepting requests. The catalog is created before the service even though it
-appears second in the registration list.
+accepting requests. Dependencies initialize before their consumers, regardless
+of the order their factories are declared.
 
 ## Declare a dependency with its type
 
@@ -125,18 +125,20 @@ registered application resource. Application resources cannot depend on
 Declare each factory parameter as `ResourceContext[T]`; use keyword-compatible
 parameters, without positional-only parameters, `*args`, or `**kwargs`.
 
-## Register every provider
+## Define and import your providers
 
-The decorator creates a handle; registration assigns it to an application:
+The `@resource` decorator registers each factory globally and returns its handle.
+Define or import your resource modules before constructing the application:
 
 ```python
-app = Karak(router=router, resources=[products, catalog])
+app = Karak(router=router)
 ```
 
-Include every dependency in the list. Karak does not scan modules or register
-dependencies implicitly. Missing providers, duplicate registrations, ambiguous
-types, and dependency cycles are rejected while constructing the application,
-before any resource factory runs.
+Each application captures all resource declarations available at construction.
+Karak does not scan or import resource modules automatically. Factories declared
+after construction are available to subsequently constructed applications.
+Missing providers, ambiguous types, and dependency cycles are rejected while
+constructing the application, before any resource factory runs.
 
 There must be one provider per declared type. Two providers returning the same
 `DatabasePool` type are ambiguous, even if their names differ. For read and write
@@ -169,7 +171,7 @@ application lifespan. Two services depending on the catalog receive that same
 catalog object.
 
 Calls at module import time, outside an active application, or after shutdown
-raise `RuntimeError`. An unregistered handle also raises an error. Calling a
+raise `RuntimeError`. A handle absent from the active application also raises an error. Calling a
 resource handler without active lifespan state produces HTTP 500 and logs the
 error. Keep the server's ASGI lifespan support enabled.
 
@@ -214,7 +216,7 @@ does not close shared application resources.
 
 All registered resources currently have application scope. Each server worker
 creates its own instances; they are not shared across processes. Separate
-applications can register the same handles without sharing instances.
+applications use the global declarations and initialize their own instances.
 
 Shared objects must support concurrent use. Keep user identity, mutable request
 state, borrowed database connections, and transactions out of shared services.

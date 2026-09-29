@@ -24,7 +24,7 @@ ASGI server
 Router decorators store endpoint definitions: full path, method, and handler.
 
 During application construction, `Karak` iterates over the supplied router
-and creates each `Route` once, using its complete path. `inspect_handler` then
+and creates each `Route` once, using its complete path. `ParamInspector.inspect()` then
 reads the handler signature, validates all path placeholders, and selects
 converters. The original definitions remain reusable and editable.
 

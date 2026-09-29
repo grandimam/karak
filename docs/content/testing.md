@@ -59,7 +59,7 @@ async def product(product_id: int, data: ResourceContext[Catalog]):
     return name
 
 
-app = Karak(router=router, resources=[catalog])
+app = Karak(router=router)
 ```
 
 `Catalog` contains ordinary Python behavior. The handler translates its result

@@ -4,7 +4,6 @@ from pathlib import Path
 from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 from contextlib import nullcontext
-from typing import Any
 
 from karak.types import Scope
 from karak.types import Receive
@@ -18,7 +17,6 @@ from karak.routing import Match
 from karak.routing import Route
 from karak.routing.staticfiles import StaticFiles
 from karak.middleware import ExceptionMiddleware
-from karak.resources import Resource
 from karak.resources import RESOURCE_STATE_KEY
 from karak.resources import _ResourceRegistry
 
@@ -30,10 +28,9 @@ class Karak:
         router: Router,
         static_dir: str | Path | None = None,
         lifespan: Callable[[], AbstractAsyncContextManager[None]] | None = None,
-        resources: list[Resource[Any]] | None = None,
     ) -> None:
         self._lifespan_factory = lifespan
-        self._resources = _ResourceRegistry(resources or [])
+        self._resources = _ResourceRegistry()
         self._static_files = StaticFiles(static_dir) if static_dir else None
         self._routes: list[Route] = []
         registered: set[tuple[str, str]] = set()
@@ -44,12 +41,14 @@ class Karak:
                     f"Duplicate route: {definition.method} {definition.path}"
                 )
             registered.add(key)
-            self._routes.append(Route(
+            route = Route(
                 definition.path,
                 methods=[definition.method],
                 handler=definition.handler,
-                resources=self._resources,
-            ))
+            )
+            for resource_type in route._context_types.values():
+                self._resources.provider_for(resource_type)
+            self._routes.append(route)
         self._app = ExceptionMiddleware(self._dispatch)
 
     async def _dispatch(

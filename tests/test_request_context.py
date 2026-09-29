@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import unittest
 
+from unittest.mock import patch
+
 from typing import Any
 
 from karak import Karak
@@ -19,6 +21,11 @@ from tests.test_route_validation import make_request
 
 
 class ContextTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        registration = patch("karak.resources._registered_resources", [])
+        registration.start()
+        self.addCleanup(registration.stop)
+
     async def test_contexts_share_one_request_and_isolate_concurrent_state(self):
         router = Router()
         seen = []
@@ -84,8 +91,8 @@ class ContextTests(unittest.IsolatedAsyncioTestCase):
             await asyncio.sleep(0)
             return db.value.name
 
-        first = Karak(router=router, resources=[pool, enabled])
-        second = Karak(router=router, resources=[pool, enabled])
+        first = Karak(router=router)
+        second = Karak(router=router)
         async with running(first) as first_state:
             async with running(second) as second_state:
                 results = await asyncio.gather(request(first, first_state), request(second, second_state))
@@ -119,6 +126,11 @@ class ContextTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ContextValidationTests(unittest.TestCase):
+    def setUp(self):
+        registration = patch("karak.resources._registered_resources", [])
+        registration.start()
+        self.addCleanup(registration.stop)
+
     def test_missing_provider_and_invalid_contexts_fail_at_construction(self):
         async def missing(value: ResourceContext[Pool]): pass
         async def bare(value: ResourceContext): pass
@@ -142,17 +154,17 @@ class ContextValidationTests(unittest.TestCase):
                     Karak(router=router)
 
     def test_request_cannot_be_registered_or_used_by_application_factory(self):
-        @resource
         def invalid() -> Request:
             raise AssertionError("must not run")
 
-        @resource
         def dependent(ctx: ResourceContext[Request]) -> Pool:
             raise AssertionError("must not run")
 
         for provider, message in ((invalid, "built-in"), (dependent, "cannot depend")):
-            with self.assertRaisesRegex(ValueError, message):
-                Karak(router=Router(), resources=[provider])
+            with patch("karak.resources._registered_resources", []):
+                resource(provider)
+                with self.assertRaisesRegex(ValueError, message):
+                    Karak(router=Router())
 
     def test_request_headers_are_read_only_and_preserve_raw_values(self):
         headers = Headers([(b"X-Test", b"one"), (b"x-test", b"two")])

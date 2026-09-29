@@ -33,8 +33,8 @@ app = Karak(router=router)
 
 ## Share services and clients
 
-Use `@resource` factories and `Karak(resources=[...])` for objects shared across
-requests. Karak initializes their dependencies before serving requests and runs
+Use `@resource` factories for objects shared across requests. The decorator
+registers each factory globally; define or import them before constructing `Karak`. Karak initializes their dependencies before serving requests and runs
 generator cleanup at shutdown. Start with the complete example in
 [share application resources](resources.md).
 

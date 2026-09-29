@@ -182,7 +182,7 @@ async def product(product_id: int, data: ResourceContext[Catalog]):
     return data.value.names.get(product_id, "Unknown product")
 
 
-app = Karak(router=router, resources=[catalog])
+app = Karak(router=router)
 ```
 
 ```sh

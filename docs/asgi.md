@@ -104,8 +104,8 @@ exceptions are logged through `karak.errors` and produce HTTP 500 with
 ## Current boundaries
 
 The application accepts a `lifespan=` async context manager for startup and
-shutdown. Register `@resource` factories through `resources=[...]`; resource
-factories declare dependencies with `ResourceContext[T]` and access their values
+shutdown. The `@resource` decorator registers factories globally; import their
+modules before constructing the application. Factories declare dependencies with `ResourceContext[T]` and access their values
 through `.value`. Handlers use the same `ResourceContext[T]` convention, or `.get()`
 on a resource handle. `ResourceContext[Request]` supplies the current request
 without a registered factory. See [application resources](content/resources.md)

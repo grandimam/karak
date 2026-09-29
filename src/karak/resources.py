@@ -24,6 +24,7 @@ from karak.request import Request
 
 
 RESOURCE_STATE_KEY = "karak.resources"
+_registered_resources: list[Resource[Any]] = []
 _current_session: ContextVar[_ResourceSession | None] = ContextVar(
     "karak_resource_session", default=None
 )
@@ -71,8 +72,10 @@ def resource[T](factory: Callable[..., T]) -> Resource[T]: ...
 
 
 def resource(factory: Callable[..., Any]) -> Resource[Any]:
-    """Declare a factory for registration in Karak(resources=[...])."""
-    return Resource(factory)
+    """Register a resource factory globally for application lifespans."""
+    item = Resource(factory)
+    _registered_resources.append(item)
+    return item
 
 
 @dataclass
@@ -107,17 +110,14 @@ def _provided_type(item: Resource[Any], hints: dict[str, Any]) -> Any:
 
 
 class _ResourceRegistry:
-    def __init__(self, resources: list[Resource[Any]]) -> None:
+    def __init__(self) -> None:
+        resources = list(_registered_resources)
         self._dependencies: dict[Resource[Any], dict[str, Resource[Any]]] = {}
         self._order: list[Resource[Any]] = []
         providers = {}
         self._providers = providers
         hints_by_resource = {}
         for item in resources:
-            if not isinstance(item, Resource):
-                raise TypeError("Register resources declared with @resource")
-            if item in hints_by_resource:
-                raise ValueError(f"Resource '{item.factory.__name__}' is registered twice")
             hints = get_type_hints(item.factory)
             provided = _provided_type(item, hints)
             if provided is Request:
@@ -223,3 +223,10 @@ class _ResourceRegistry:
             finally:
                 session.active = False
                 session.values.clear()
+
+
+def _resolve_resource(resource_type: Any) -> Any:
+    session = _current_session.get()
+    if not session or not session.active:
+        raise RuntimeError("Resource access requires an active application lifespan")
+    return session.registry.provider_for(resource_type).get()

@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from karak.exceptions import RequestValidationError
-from karak.parameters import inspect_handler
+from karak.parameters import ParamInspector
 from karak.parameters import ParameterSource
 from karak.request import Request
 from karak.request import REQUEST_SCOPE_KEY
 from karak.resources import ResourceContext
-from karak.resources import _ResourceRegistry
+from karak.resources import _resolve_resource
 from karak.response import Response
 from karak.routing.matching import Match
 from karak.routing.matching import PARAM_RE
@@ -34,7 +34,6 @@ class Route:
         *,
         methods: list[str] | None,
         handler: Callable[..., Any],
-        resources: _ResourceRegistry | None = None,
     ):
         if path and not path.startswith("/"):
             raise ValueError("Route paths must be empty or start with '/'")
@@ -43,13 +42,12 @@ class Route:
         self._methods = methods or ["GET"]
         self._path_regex = compile_path(self._path)
         self._path_parameter_names = set(PARAM_RE.findall(self._path))
-        self._handler_params = inspect_handler(
+        self._handler_params = ParamInspector(
             self._handler,
             self._path_parameter_names,
-        )
-        registry = resources or _ResourceRegistry([])
-        self._context_providers = {
-            name: registry.provider_for(parameter.resource_type)
+        ).inspect()
+        self._context_types = {
+            name: parameter.resource_type
             for name, parameter in self._handler_params.items()
             if parameter.source is ParameterSource.CONTEXT
             and parameter.resource_type is not Request
@@ -74,7 +72,7 @@ class Route:
             if parameter.source is ParameterSource.CONTEXT:
                 value = (
                     request if parameter.resource_type is Request
-                    else self._context_providers[name].get()
+                    else _resolve_resource(self._context_types[name])
                 )
                 handler_arguments[name] = ResourceContext(value)
                 continue

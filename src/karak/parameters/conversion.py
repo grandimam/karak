@@ -3,11 +3,7 @@ from datetime import date
 from datetime import datetime
 from decimal import Decimal
 from decimal import InvalidOperation
-from enum import Enum
 from typing import Any
-from typing import Literal
-from typing import get_args
-from typing import get_origin
 from uuid import UUID
 
 
@@ -44,26 +40,4 @@ def get_converter(annotation: Any) -> Callable[[str], Any]:
     if converter:
         return converter
 
-    if isinstance(annotation, type) and issubclass(annotation, Enum):
-        choices = [(member.value, member) for member in annotation]
-    elif get_origin(annotation) is Literal:
-        choices = [(value, value) for value in get_args(annotation)]
-    else:
-        raise TypeError(f"Unsupported annotation: {annotation!r}")
-
-    converters = [
-        (get_converter(type(value)), value, result) for value, result in choices
-    ]
-
-    def convert_choice(raw: str) -> Any:
-        for convert, value, result in converters:
-            try:
-                converted = convert(raw)
-            except (TypeError, ValueError):
-                continue
-            if type(converted) is type(value) and converted == value:
-                return result
-        allowed = ", ".join(repr(value) for value, _ in choices)
-        raise ValueError(f"expected one of: {allowed}")
-
-    return convert_choice
+    raise TypeError(f"Unsupported annotation: {annotation!r}")

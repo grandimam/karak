@@ -6,7 +6,7 @@ from unittest.mock import patch
 from karak import Karak
 from karak import Response
 from karak import Router
-from karak.parameters import inspect_handler
+from karak.parameters import ParamInspector
 from tests.test_route_validation import make_request
 
 
@@ -116,8 +116,8 @@ class RouterDecoratorTests(unittest.TestCase):
         self.assertEqual(make_request(updated, "/later")[1]["body"], b"later")
 
     def test_full_paths_convert_parameters_and_inspect_handlers_once(self):
-        with patch(
-            "karak.routing.route.inspect_handler", wraps=inspect_handler
+        with patch.object(
+            ParamInspector, "inspect", autospec=True, side_effect=ParamInspector.inspect
         ) as inspect:
             router = Router()
 
@@ -127,13 +127,13 @@ class RouterDecoratorTests(unittest.TestCase):
 
             inspect.assert_not_called()
             app = Karak(router=router)
-            inspect.assert_called_once_with(post, {"user_id", "post_id"})
+            inspect.assert_called_once()
             for _ in range(2):
                 response = make_request(
                     app, "/api/users/42/posts/7", b"preview=true&user_id=999"
                 )
                 self.assertEqual(response[1]["body"], b"42:7:True")
-            inspect.assert_called_once_with(post, {"user_id", "post_id"})
+            inspect.assert_called_once()
 
     def test_literal_paths_and_trailing_slashes_match_exactly(self):
         router = Router()
