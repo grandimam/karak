@@ -1,8 +1,33 @@
+<div align="center">
+
+<img src="docs/content/assets/share-card-sphere.png" alt="A layered paper sphere in soft sage, blue, and cream" width="360">
+
 # Karak
 
-Build Python HTTP applications with async functions, typed inputs, and shared resources.
+**Build Python backends with async functions, typed inputs, and shared resources.**
 
-Python 3.13+ · Zero runtime dependencies · Experimental
+![Status: Experimental](https://img.shields.io/badge/status-experimental-bb9363?style=flat-square&labelColor=263e48)
+![Python: 3.13+](https://img.shields.io/badge/python-3.13%2B-345f76?style=flat-square&labelColor=263e48&logo=python&logoColor=white)
+![Runtime dependencies: 0](https://img.shields.io/badge/runtime_dependencies-0-657c62?style=flat-square&labelColor=263e48)
+[![License: MIT](https://img.shields.io/badge/license-MIT-657c62?style=flat-square&labelColor=263e48)](LICENSE)
+
+[Get started](#hello-world) &nbsp; · &nbsp; [Documentation](docs/README.md) &nbsp; · &nbsp; [Benchmarks](docs/content/benchmarks.md)
+
+</div>
+
+## How to use Karak
+
+| I want to… | Start here |
+| --- | --- |
+| Run my first endpoint | [Hello World](#hello-world) |
+| Accept values from a URL | [Path and query parameters](#read-path-and-query-parameters) |
+| Handle a POST and choose a status code | [POST requests](#handle-a-post-request) |
+| Read the current request | [Headers and cookies](#read-headers-and-cookies) |
+| Send a cookie or custom header | [Response headers and cookies](#set-a-cookie-and-response-header) |
+| Initialize a service once and reuse it | [Shared resources](#share-a-service-across-requests) |
+| Split my app into feature files | [Project layout](#organize-a-growing-application) |
+
+[Testing](docs/content/testing.md) · [Startup and shutdown](docs/content/application.md) · [Contributing](#development)
 
 ## Hello World
 
