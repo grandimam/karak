@@ -1,112 +1,20 @@
-<div align="center">
-
-<img src="docs/content/assets/share-card-sphere.png" alt="A layered paper sphere in soft sage, blue, and cream" width="460">
-
 # Karak
 
-**Python backend development should be integrated, not assembled.**
+Build Python HTTP applications with async functions, typed inputs, and shared resources.
 
-One coherent system to learn deeply, build with, and operate.<br>
-Learn the fundamentals. Learn Karak deeply. Build serious Python backends.
+Python 3.13+ · Zero runtime dependencies · Experimental
 
-![Status: Experimental](https://img.shields.io/badge/status-experimental-bb9363?style=flat-square&labelColor=263e48)
-![Python: 3.13+](https://img.shields.io/badge/python-3.13%2B-345f76?style=flat-square&labelColor=263e48&logo=python&logoColor=white)
-![Runtime dependencies: 0](https://img.shields.io/badge/runtime_dependencies-0-657c62?style=flat-square&labelColor=263e48)
-[![License: MIT](https://img.shields.io/badge/license-MIT-657c62?style=flat-square&labelColor=263e48)](LICENSE)
+## Hello World
 
-[The vision](#the-vision) &nbsp; · &nbsp; [Quick start](#quick-start) &nbsp; · &nbsp; [Documentation](docs/README.md) &nbsp; · &nbsp; [Contributing](#development)
+Install from a repository checkout. The development environment includes Uvicorn:
 
-</div>
-
-> [!WARNING]
-> **Experimental.** Today Karak provides a small HTTP foundation with async endpoints. Durable jobs, database-backed queues, scheduling, and job management are planned. Karak is not ready for production use; APIs and behavior may change without notice.
-
-## The vision
-
-Python backend development has become fragmented. Building a production
-application often means assembling an ASGI framework, server, task queue,
-broker, scheduler, migration tools, observability, and deployment tooling.
-Each brings its own abstractions, configuration, lifecycle, and failure modes.
-
-Karak's thesis is that backend engineering should be coherent. An engineer
-should be able to learn Python, understand backend fundamentals, and learn
-Karak deeply—then apply that knowledge across the production backend.
-Karak should absorb the unnecessary integration and tooling complexity.
-
-### Learn the fundamentals. Learn Karak deeply.
-
-Karak is built for engineers. HTTP, databases, transactions, concurrency,
-reliability, and distributed systems remain essential knowledge. The goal is
-to let you apply those concepts through one coherent system without needing
-to become an expert in a dozen unrelated tools.
-
-The ambition is to make **“Karak engineer”** meaningful: someone who can build
-and operate serious Python backends through deep knowledge of the fundamentals
-and Karak.
-
-### One model across the production backend
-
-Karak should progressively own more of the backend experience:
-
-**HTTP → persistence → background work → scheduling → observability → operation**
-
-Across that progression, the design commitment is:
-
-- **One programming model:** familiar Python functions, types, and shared resources.
-- **One configuration model:** consistent settings across application capabilities.
-- **One lifecycle:** defined resource setup, execution, cleanup, and shutdown.
-- **One operational model:** consistent ways to run, inspect, diagnose, and recover work.
-
-This is the product direction. Today Karak implements an early HTTP foundation;
-the integrated production experience is still to be built.
-
-### Background work shows why this matters
-
-An application might begin by sending an email after a request, then need work
-that survives restarts, retries failures, and runs across multiple workers.
-That growth often means moving from framework background tasks to Celery,
-Redis or RabbitMQ, workers, and a scheduler, with a new set of concepts and
-configuration to learn.
-
-Karak should provide a path from simple background execution to durable
-distributed work while preserving the developer's mental model. Durability,
-retry policies, duplicate execution, and transaction boundaries must remain
-explicit as requirements grow. Engineers should gain stronger capabilities
-within Karak, with the reliability guarantees clearly documented at each step.
-
-Background work is one example of the broader thesis. Persistence, migrations,
-scheduling, observability, and operation should follow the same principle:
-new capabilities should build on what a Karak engineer already knows.
-
-[Explore the thesis and direction →](docs/content/design.md) &nbsp; · &nbsp; [Read the architecture proposals →](docs/design.md)
-
-## What you can try today
-
-Karak starts with an HTTP foundation: an ASGI application, typed routes, input
-validation, and text or byte responses. The current framework has **zero runtime
-dependencies** and runs on **standard Python 3.13+**.
-
-| Write a function | Let types do the parsing | Keep the setup small |
-| :--- | :--- | :--- |
-| Connect an async handler to a path and HTTP methods. | Turn path and query values into Python objects, with defaults and validation. | Run with an ASGI server. No free-threaded Python build required. |
-
-## Quick start
-
-You will need **Python 3.13+**, **Git**, and [uv](https://docs.astral.sh/uv/).
-
-### 1. Set up the project
-
-Start from a repository checkout. The development environment includes Uvicorn.
-
-```bash
+```sh
 git clone https://github.com/grandimam/karak.git
 cd karak
 uv sync
 ```
 
-### 2. Write an endpoint
-
-Create `example.py` in the repository root:
+Create `main.py`:
 
 ```python
 from karak import Karak
@@ -115,130 +23,64 @@ from karak import Router
 router = Router()
 
 
-@router.get("/users/{user_id}")
-async def get_user(user_id: int, active: bool = True):
-    return f"User {user_id} · active={active}"
+@router.get("/")
+async def hello():
+    return "Hello, world!"
 
 
 app = Karak(router=router)
 ```
 
-`user_id` comes from the path. `active` comes from the query string and defaults
-to `True` when omitted. Karak converts both before calling your handler.
+Run it:
 
-### 3. Bring it to life
-
-```bash
-uv run uvicorn example:app --reload
+```sh
+uv run uvicorn main:app --reload
 ```
 
-In another terminal, make a request:
+Open [localhost:8000](http://127.0.0.1:8000). You should see `Hello, world!`.
 
-```bash
-curl 'http://127.0.0.1:8000/users/42?active=true'
-```
+For the next examples, add imports at the top of `main.py` and handlers **before**
+`app = Karak(router=router)`.
 
-```text
-User 42 · active=True
-```
-
-Try `/users/not-a-number` and Karak responds with **HTTP 422**. Your handler only
-runs after its inputs pass validation.
-
-## Types do the parsing
-
-Use Python annotations to describe the values your endpoint accepts. Named path
-parameters come from the URL path; other parameters come from the query string.
-Python defaults apply when a query parameter is omitted.
-
-Add this route above `app = Karak(router=router)` in `example.py` to
-combine repeated query values with a restricted set of choices:
+## Read path and query parameters
 
 ```python
-from typing import Literal
-
-
-@router.get("/products")
-async def products(tag: list[str], sort: Literal["price", "newest"] = "newest"):
-    return f"Tags: {', '.join(tag)} · sort={sort}"
+@router.get("/users/{user_id}")
+async def user(user_id: int, active: bool = True):
+    return f"User {user_id}, active={active}"
 ```
 
-```bash
-curl 'http://127.0.0.1:8000/products?tag=python&tag=backend&sort=price'
+```sh
+curl 'http://127.0.0.1:8000/users/42?active=false'
+# User 42, active=False
 ```
 
-```text
-Tags: python, backend · sort=price
-```
+`user_id` comes from the path; `active` comes from the query string. Karak
+converts them using the annotations. Missing required values and invalid inputs
+return HTTP 422.
 
-<details>
-<summary><strong>Explore the supported parameter types</strong></summary>
+[More parameter types →](docs/content/parameters.md)
 
-<br>
-
-| Type | Example input | Handler receives |
-| --- | --- | --- |
-| `str` | `name=karak` | A string |
-| `int` | `page=2` | An integer |
-| `float` | `ratio=0.5` | A float |
-| `bool` | `active=true` | A boolean; also accepts `1/0`, `yes/no`, and `on/off` |
-| `UUID` | `id=12345678-1234-5678-1234-567812345678` | A UUID object |
-| `date` | `day=2026-09-25` | An ISO date |
-| `datetime` | `at=2026-09-25T12:30:00Z` | An ISO datetime |
-| `Decimal` | `amount=19.99` | An exact decimal value |
-| `Enum` | `status=shipped` | A matching enum member |
-| `Literal["price", "newest"]` | `sort=price` | An allowed value |
-| `list[int]` | `id=1&id=2` | `[1, 2]` — query parameters only |
-
-Missing required parameters and invalid values produce **HTTP 422** responses.
-Repeated query keys are accepted for lists and rejected for scalar parameters.
-Unsupported annotations are rejected when the application is constructed.
-
-</details>
-
-[Read the parameter guide →](docs/content/parameters.md)
-
-## Choose the response
-
-Return a string or bytes directly, or use `Response` to set a status code. Add
-this route before constructing the application:
+## Handle a POST request
 
 ```python
 from karak import Response
 
 
 @router.post("/greetings")
-async def create_greeting(name: str):
-    return Response(status_code=201, content=f"Hello, {name}")
+async def greet(name: str):
+    return Response(status_code=201, content=f"Hello, {name}!")
 ```
 
-```bash
-curl -i -X POST 'http://127.0.0.1:8000/greetings?name=Karak'
+```sh
+curl -i -X POST 'http://127.0.0.1:8000/greetings?name=Sam'
+# HTTP 201, with the body: Hello, Sam!
 ```
 
-This returns **HTTP 201** with the body `Hello, Karak`. Use `router.get` for
-GET endpoints and `router.post` for POST endpoints. JSON responses are planned.
+Here `name` is a query parameter. JSON bodies are not automatically bound to
+handler parameters.
 
-[Read the response guide →](docs/content/responses.md)
-
-## Organize endpoints with routers
-
-Start with `app/main.py`, `app/resources.py`, and one file per feature, such as
-`app/users.py` and `app/orders.py`. Keep tests in `tests/test_users.py` and
-`tests/test_orders.py`. Expand a feature or its tests into a package when it
-needs several files. See the [recommended project layout](docs/content/project-layout.md).
-
-Declare each endpoint's full path with `@router.get(path)` or
-`@router.post(path)`, then pass the router to `Karak(router=router)`.
-The application builds and validates its routes during construction.
-Give each module its own router and combine them with `router.include(child)`.
-
-[See the routing guide →](docs/content/routing.md)
-
-## Read request context
-
-Use the same `ResourceContext[T]` convention in handlers and resource factories.
-`ResourceContext[Request]` provides the current request without a factory:
+## Read headers and cookies
 
 ```python
 from karak import Request
@@ -247,98 +89,142 @@ from karak import ResourceContext
 
 @router.get("/preferences")
 async def preferences(context: ResourceContext[Request]):
-    return context.value.cookies.get("theme", "light")
+    request = context.value
+    client = request.headers.get("x-client", "unknown")
+    theme = request.cookies.get("theme", "light")
+    return f"Client: {client}, theme: {theme}"
 ```
 
-Register this endpoint before constructing the application. Request headers,
-cookies, body bytes, and isolated state live on `context.value`. Registered
-application services are available through `ResourceContext[ServiceType]`.
+```sh
+curl -H 'X-Client: web' -b 'theme=dark' http://127.0.0.1:8000/preferences
+# Client: web, theme: dark
+```
 
-[Follow the complete request guide →](docs/content/request-context.md)
+Karak supplies the current request through `ResourceContext[Request]`.
+Use `await context.value.body()` to read body bytes, or `context.value.state`
+to keep data for the current request.
 
-New to Karak? Start with [Hello World](docs/content/index.md), add
-[endpoints](docs/content/endpoints.md), then explore inputs, responses, request
-context, and shared services in the [documentation](docs/README.md).
+[Request context →](docs/content/request-context.md)
 
-## Where we are
+## Set a cookie and response header
 
-For reproducible local HTTP comparisons with FastAPI, see
-[benchmarks](docs/content/benchmarks.md) and the [benchmark runner](benchmarks/README.md).
+```python
+@router.post("/preferences")
+async def save_preferences():
+    response = Response(content="Preference saved")
+    response.headers["content-type"] = "text/plain; charset=utf-8"
+    response.set_cookie("theme", "dark", httponly=True, samesite="lax")
+    return response
+```
 
-The HTTP foundation is available for experimentation. The broader system is
-planned. Each capability should extend the same programming, configuration,
-lifecycle, and operational models.
+```sh
+curl -i -X POST http://127.0.0.1:8000/preferences
+```
 
-| Area | Today | Direction |
-| :--- | :--- | :--- |
-| **HTTP** | ASGI, composed routers, typed inputs, request and resource contexts, headers, cookies, text and bytes | JSON, generated API documentation |
-| **Application lifecycle** | Typed resource dependencies, automatic setup and cleanup, optional `lifespan=` hook | Graceful shutdown coordination |
-| **Persistence** | Planned | Database resources, explicit transactions, and migrations within the application model |
-| **Background work** | Planned | A path from simple execution to durable distributed jobs, retries, and failure recovery |
-| **Recurring work** | Planned | Scheduling with defined behavior for missed and overlapping runs |
-| **Observability** | Planned | Connected request and job context, logs, metrics, and health information |
-| **Operation** | Planned | Consistent configuration, process management, deployment, inspection, and recovery |
-| **Webhooks and workflows** | Later | Reliable delivery and multistep work built on durable jobs |
-| **Execution** | Async route handlers | Synchronous Python and free-threaded execution |
+The response includes `Content-Type` and `Set-Cookie` headers.
+Use `response.delete_cookie("theme")` to expire the cookie.
 
-## Find your next step
+[Responses and cookies →](docs/content/responses.md)
 
-| If you want to… | Start here |
-| :--- | :--- |
-| Learn the framework | [Documentation](docs/README.md) |
-| Add endpoints and accept input | [Routing](docs/content/routing.md) · [Parameters](docs/content/parameters.md) |
-| Share services and manage their dependencies | [Application resources](docs/content/resources.md) |
-| Understand the current implementation | [ASGI guide](docs/asgi.md) · [Request handling](docs/server.md) |
-| Measure a local application | [Load testing](docs/load-testing.md) |
-| Work on the documentation site | [Website development](docs/website.md) |
-| Report a bug or propose a workflow | [Issue tracker](https://github.com/grandimam/karak/issues) |
+## Share a service across requests
+
+Replace `main.py` with this complete example:
+
+```python
+from dataclasses import dataclass
+
+from karak import Karak
+from karak import ResourceContext
+from karak import Router
+from karak import resource
+
+
+@dataclass
+class Catalog:
+    names: dict[int, str]
+
+
+@resource
+def catalog() -> Catalog:
+    return Catalog({1: "Tea", 2: "Coffee"})
+
+
+router = Router()
+
+
+@router.get("/products/{product_id}")
+async def product(product_id: int, data: ResourceContext[Catalog]):
+    return data.value.names.get(product_id, "Unknown product")
+
+
+app = Karak(router=router, resources=[catalog])
+```
+
+```sh
+curl http://127.0.0.1:8000/products/1
+# Tea
+```
+
+Karak creates the catalog at startup and shares it across requests.
+Use a generator factory when a resource needs cleanup at shutdown.
+
+[Resource dependencies and cleanup →](docs/content/resources.md)
+
+## Organize a growing application
+
+Start with one file per feature and one test file per feature:
+
+```text
+app/
+├── __init__.py
+├── main.py
+├── resources.py
+├── users.py
+└── orders.py
+tests/
+├── __init__.py
+├── test_users.py
+└── test_orders.py
+```
+
+Export a `router` from `users.py` and `orders.py`, then combine them in
+`app/main.py`:
+
+```python
+from karak import Karak
+from karak import Router
+
+from app.users import router as users_router
+from app.orders import router as orders_router
+
+router = Router()
+router.include(users_router)
+router.include(orders_router)
+
+app = Karak(router=router)
+```
+
+Run this layout with `uv run uvicorn app.main:app --reload`. Expand a feature
+or its tests into a package when it needs several files.
+
+[Router examples →](docs/content/routing.md) · [Project layout →](docs/content/project-layout.md)
+
+## Documentation
+
+[All guides](docs/README.md) · [Testing](docs/content/testing.md) ·
+[Application lifecycle](docs/content/application.md) · [Benchmarks](docs/content/benchmarks.md)
+
+Karak is experimental and not ready for production use. It currently supports
+async GET/POST handlers, typed path/query inputs, text/byte responses, headers,
+cookies, static files, and shared resources. Automatic JSON binding and responses
+are not implemented. Unknown URLs currently return 500 rather than 404.
+See [the project direction](docs/content/design.md) for planned capabilities.
 
 ## Development
 
-From your repository checkout, install dependencies and run the test suite:
-
-```bash
+```sh
 uv sync
 uv run python -m unittest discover -s tests
 ```
 
-Contributions are welcome: try the examples, report a reproducible bug, improve
-a guide, or share a workflow you would like Karak to support. For substantial
-changes, start with an [issue](https://github.com/grandimam/karak/issues) so we can
-discuss the direction together.
-
-<details>
-<summary><strong>A look around the repository</strong></summary>
-
-<br>
-
-```text
-src/karak/
-├── __init__.py             # Public exports
-├── application.py         # Karak and ASGI lifecycle
-├── request.py             # Request wrapper
-├── response.py            # Response serialization
-├── routing/
-│   ├── __init__.py
-│   ├── routes.py          # Route definitions and dispatch
-│   ├── router.py          # Route selection
-│   └── matching.py        # Path patterns and match results
-├── parameters/
-│   ├── __init__.py
-│   ├── inspection.py      # Handler signatures and parameter validation
-│   └── conversion.py      # Supported type converters
-├── middleware/
-│   ├── __init__.py
-│   └── exceptions.py      # Request error handling
-├── exceptions.py          # Framework exception types
-├── types.py               # ASGI type aliases
-└── py.typed
-tests/                     # ASGI routing and validation tests
-docs/                      # Guides, design proposals, and documentation site
-```
-
-</details>
-
-## License
-
-Open source under the [MIT License](LICENSE).
+[Report an issue](https://github.com/grandimam/karak/issues) · [MIT License](LICENSE)
