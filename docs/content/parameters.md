@@ -1,6 +1,6 @@
 ---
 title: Path and query parameters
-lesson: 4
+guide: true
 description: Accept filters, page numbers, and repeated values, with useful defaults and input validation.
 ---
 
@@ -8,12 +8,11 @@ description: Accept filters, page numbers, and repeated values, with useful defa
 
 <p class="lead">Use Python types and defaults to describe a request.</p>
 
-In the previous lesson, a fixed path selected a handler. Now let part of the
-URL vary. A path placeholder such as `{user_id}` names a value inside the path;
+A fixed path selects a handler. A parameter lets part of the URL vary. A path placeholder such as `{user_id}` names a value inside the path;
 the query string after `?` supplies optional controls such as pagination.
 
 Suppose you want a user endpoint with a page number and an active-user filter.
-Add this handler to the `main.py` from lesson 2, before `app = Karak(...)`:
+Add this handler to the `main.py` from [endpoints and methods](endpoints.md), before `app = Karak(...)`:
 
 ```python
 @router.get("/users/{user_id}")
@@ -112,12 +111,15 @@ Use supported types for every parameter. Types such as `str | None`, nested
 lists, dictionaries, and body models are not supported in the main framework
 yet. An unsupported annotation prevents the application from being constructed.
 
-## Predict the handler's inputs
+## Compare requests to the same endpoint
 
-Try `/users/42`, `/users/42?page=2&active=false`, and `/users/alex` with curl.
-Before each request, predict either the Python values the handler receives or
-the validation failure. Add a required `limit: int` parameter to a separate
-endpoint and compare an omitted limit with `limit=0`.
+For the user handler above:
 
-Next, choose the status and body your caller receives. Headers, cookies, and
-body bytes are introduced in the later [request context lesson](request-context.md).
+| Request | Result |
+| --- | --- |
+| `/users/42` | `user_id=42`, `page=1`, `active=True` |
+| `/users/42?page=2&active=false` | `user_id=42`, `page=2`, `active=False` |
+| `/users/alex` | HTTP 422; the handler does not run |
+
+Choose what callers receive with [responses](responses.md). For headers,
+cookies, and body bytes, use [request context](request-context.md).

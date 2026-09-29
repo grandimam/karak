@@ -1,6 +1,6 @@
 ---
 title: Application lifecycle
-lesson: 9
+guide: true
 description: Start your Karak application, edit it locally, and understand the current deployment limits.
 ---
 
@@ -8,12 +8,12 @@ description: Start your Karak application, edit it locally, and understand the c
 
 <p class="lead">Know when shared objects are created, used, and released.</p>
 
-The [previous lesson](resources.md) introduced resources that live across
-requests. This chapter follows their application lifetime and adds a startup
-hook. You already know how to run a server; the commands here also serve as a
-reference when editing or changing ports.
+[Shared resources](resources.md) live across requests. The application
+lifecycle determines when they are created and released. Use a lifespan hook
+for additional startup and shutdown work, and the server settings below when
+editing or changing ports.
 
-For this lesson, replace `main.py` with a small application so startup and
+To try a lifespan hook, start by replacing `main.py` with a small application so startup and
 shutdown messages are easy to observe:
 
 ```python
@@ -133,12 +133,12 @@ when evaluating behavior across a long-running process: each reload creates a
 new application lifespan and new resource instances. Configure and manage the
 ASGI server yourself; Karak does not include a deployment command.
 
-## Observe a complete lifetime
+## Recognize startup and shutdown in the terminal
 
-Run the example with the `lifespan` function. Confirm that `Application starting`
-appears before you make a request. Make two requests, then stop the server and
-look for `Application stopping`. Startup is per application lifetime, not per
-request. With `--reload`, editing the file starts another lifetime.
+With the `lifespan` example, `Application starting` appears before requests are
+served and `Application stopping` appears during shutdown. These messages occur
+per application lifetime. Making another request does not repeat startup;
+editing a file with `--reload` starts a new lifetime.
 
-Explain where you would initialize a shared pool and why a user's request data
-must not live there. Next, turn manual checks into automated tests.
+The [testing guide](testing.md) shows how to exercise this lifecycle and make
+requests without starting a network server.

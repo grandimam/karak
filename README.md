@@ -223,6 +223,11 @@ GET endpoints and `router.post` for POST endpoints. JSON responses are planned.
 
 ## Organize endpoints with routers
 
+Start with `app/main.py`, `app/resources.py`, and one file per feature, such as
+`app/users.py` and `app/orders.py`. Keep tests in `tests/test_users.py` and
+`tests/test_orders.py`. Expand a feature or its tests into a package when it
+needs several files. See the [recommended project layout](docs/content/project-layout.md).
+
 Declare each endpoint's full path with `@router.get(path)` or
 `@router.post(path)`, then pass the router to `Karak(router=router)`.
 The application builds and validates its routes during construction.
@@ -251,10 +256,9 @@ application services are available through `ResourceContext[ServiceType]`.
 
 [Follow the complete request guide →](docs/content/request-context.md)
 
-New to backend development? Follow the [curriculum](docs/content/curriculum.md):
-Hello World → endpoints → requests → validation → responses → context → modules
-→ resources → lifecycle → testing. The [first-week schedule](docs/content/first-week.md)
-groups the lessons into seven practical sessions.
+New to Karak? Start with [Hello World](docs/content/index.md), add
+[endpoints](docs/content/endpoints.md), then explore inputs, responses, request
+context, and shared services in the [documentation](docs/README.md).
 
 ## Where we are
 

@@ -141,5 +141,5 @@ dialog::backdrop { background: #263e4866; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
-.lesson-navigation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
-.lesson-navigation a { max-width: 100%; overflow-wrap: anywhere; }
+.guide-navigation { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); }
+.guide-navigation a { max-width: 100%; overflow-wrap: anywhere; }

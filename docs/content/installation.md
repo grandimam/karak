@@ -1,5 +1,6 @@
 ---
 title: Installation
+guide: true
 description: Set up Python and Karak, verify your environment, and resolve common setup problems before Hello World.
 ---
 
@@ -36,7 +37,7 @@ uv run python -c "from karak import Karak; print('Karak is ready')"
 ```
 
 You should see `Karak is ready`. This checks the environment without requiring
-an example file. Continue to [lesson 1: Hello World](index.md) to create your
+an example file. Continue to [Hello World](index.md) to create your
 own `main.py` and start a server.
 
 ## If setup gets stuck
@@ -49,5 +50,5 @@ own `main.py` and start a server.
 | The server cannot import `main` | Save `main.py` in the project root, and name the application `app`. |
 | Port 8000 is already in use | Stop the other server, or add `--port 8001` and open port 8001 in the browser. |
 
-Start the [curriculum](curriculum.md) with [Hello World](index.md). The later
-[lifecycle lesson](application.md) covers startup, shutdown, and server settings.
+Start with [Hello World](index.md). The
+[application lifecycle guide](application.md) covers startup, shutdown, and server settings.

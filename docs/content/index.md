@@ -1,6 +1,6 @@
 ---
 title: Hello World
-lesson: 1
+guide: true
 description: Install Karak, write an async endpoint, and run your first Python HTTP application.
 ---
 
@@ -13,11 +13,13 @@ description: Install Karak, write an async endpoint, and run your first Python H
   <img class="opening-sphere" src="assets/share-card-sphere.png" width="1734" height="907" alt="" fetchpriority="high">
 </header>
 
-This is lesson 1 of [Learn modern Python backend development](curriculum.md).
-Start with a program that answers one HTTP request. You will run it, change its
-response, and explain what the client sees. Later chapters add inputs, cookies,
-modules, and shared services. Karak is experimental; use this course for local
-learning and development.
+Karak is a Python framework for building async HTTP applications. Define
+endpoints with Python functions, validate inputs with type annotations, and
+share services through typed resource contexts.
+
+Start with a small application that returns a greeting. You can add the
+capabilities your backend needs as you go. Karak is experimental and currently
+suited to local development and evaluation.
 
 ## Install
 
@@ -71,12 +73,15 @@ Change the returned text, save `main.py`, and refresh the browser. The
 `--reload` option restarts the development server when you edit a file.
 Press **Ctrl+C** in the terminal when you want to stop it.
 
-## Make the greeting your own
+## Add to your application
 
-Change the response to `"Hello from my backend"`, refresh the browser, and check
-that it changed. Stop the server and start it again without referring to the
-commands above. You should be able to identify the file, application object,
-and address you are opening.
+[Add another endpoint](endpoints.md) to give the application a second URL, then
+[accept path and query values](parameters.md) to make its response depend on
+caller input. For the request's headers, cookies, and body, use
+[request context](request-context.md).
 
-Next, add a second endpoint and make a POST request. Follow the lesson links
-below to continue in order, or return to the [curriculum map](curriculum.md).
+As the application grows, start with the [recommended project layout](project-layout.md),
+[split routes into modules](routing.md), and
+[share services](resources.md) across handlers. Each guide includes examples
+you can run independently; complete `main.py` examples replace the previous
+file, while smaller snippets explain where to add them.

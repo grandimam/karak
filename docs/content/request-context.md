@@ -1,6 +1,6 @@
 ---
 title: Request context
-lesson: 6
+guide: true
 description: Receive the current request through ResourceContext, read headers and cookies, and keep data isolated between callers.
 ---
 
@@ -19,8 +19,8 @@ request.
 
 `ResourceContext[Request]` is a typed wrapper. The brackets name the value you
 want Karak to supply; `.value` accesses that value. The wrapper is a Python
-object, not data sent by the client. In lesson 8 the same convention supplies
-a shared application service with a longer lifetime.
+object, not data sent by the client. The same convention supplies
+[shared application services](resources.md) with a longer lifetime.
 
 ## Run a complete example
 
@@ -192,12 +192,13 @@ use the name of a path placeholder. Query parameters cannot override them.
 A missing registered provider prevents startup. An application resource cannot
 depend on `Request`, because it lives longer than one request.
 
-## Trace the preference round trip
+## Validate values when you use them
 
-Start with no cookie jar, save a dark theme, read it back, and reset it. Identify
-which response carries `Set-Cookie` and which later request carries `Cookie`.
-Then send a cookie directly with `curl -b 'theme=blue'`: the server receives a
-client-supplied value even though the preference endpoint only sets light or
-dark. Explain where validation would belong if the theme controlled behavior.
+`Set-Cookie` asks the client to store a preference; a later `Cookie` request
+header sends it back. Clients can also send values directly, such as
+`curl -b 'theme=blue'`, even though the preference endpoint only sets light or
+dark. Validate cookie values before using them to control application behavior.
 
-Next, move related endpoints into separate modules while preserving their URLs.
+To share business logic between handlers, continue with
+[application resources](resources.md). To organize the handlers themselves,
+use [routers and modules](routing.md).

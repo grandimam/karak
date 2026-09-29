@@ -20,23 +20,21 @@ markdown_extensions:
   - toc:
       permalink: false
 nav:
-  - Learning path:
-      - Curriculum: curriculum.md
+  - Getting started:
+      - Hello World: index.md
       - Installation: installation.md
-      - First-week schedule: first-week.md
-  - "Part 1 · Your first HTTP app":
-      - "1. Hello World": index.md
-      - "2. Endpoints and methods": endpoints.md
-      - "3. Follow a request": introduction.md
-  - "Part 2 · Requests and responses":
-      - "4. Path and query parameters": parameters.md
-      - "5. Responses and errors": responses.md
-      - "6. Request context": request-context.md
-  - "Part 3 · Structure and reliability":
-      - "7. Routers and modules": routing.md
-      - "8. Shared resources": resources.md
-      - "9. Application lifecycle": application.md
-      - "10. Test your backend": testing.md
+      - Endpoints and methods: endpoints.md
+      - How requests work: introduction.md
+  - Requests and responses:
+      - Path and query parameters: parameters.md
+      - Responses and errors: responses.md
+      - Headers, cookies, and context: request-context.md
+  - Building applications:
+      - Project layout: project-layout.md
+      - Routers and modules: routing.md
+      - Shared resources: resources.md
+      - Application lifecycle: application.md
+      - Testing: testing.md
   - Reference:
       - Benchmarks: benchmarks.md
       - Mission: design.md

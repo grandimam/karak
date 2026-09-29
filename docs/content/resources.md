@@ -1,6 +1,6 @@
 ---
 title: Shared resources
-lesson: 8
+guide: true
 description: Register resources, declare typed dependencies with ResourceContext, and share initialized services across requests.
 ---
 
@@ -11,6 +11,12 @@ description: Register resources, declare typed dependencies with ResourceContext
 An application resource is an object that lives while your application is running:
 a database pool, a client, a cache, or a service. Decorate its factory with
 `@resource` and register the resulting handle with `Karak(resources=[...])`.
+
+The example below keeps everything in one file so you can run it immediately.
+In a larger application, put factories in `app/resources.py`, feature behavior
+in `app/users.py` or `app/orders.py`, and application assembly in `app/main.py`.
+The [project layout guide](project-layout.md) shows how those files grow into
+packages when needed.
 
 ## Build a working example
 
@@ -245,13 +251,13 @@ and copy that dictionary into each HTTP scope. Karak uses ASGI lifespan state to
 select the correct application resource instances; running requests directly
 without it does not initialize resources.
 
-The [testing lesson](testing.md) turns this into runnable unit and HTTP tests.
+The [testing guide](testing.md) turns this into runnable unit and HTTP tests.
 
-## Explain who owns the catalog
+## Follow the resource lifetime
 
-Run the complete example and request two product IDs. Trace both requests back
-to the same service and catalog instance. Add a print before the factory's
-`yield` and inside its `finally`, then stop and restart the server. Confirm that
-setup and cleanup follow the application lifetime, not each lookup.
+Both product lookups use the same initialized service and catalog. Factory
+setup runs once per application lifetime; generator cleanup runs at shutdown.
+A reload starts a new lifetime with new instances.
 
-Next, follow those startup and shutdown events through the application lifecycle.
+See [application lifecycle](application.md) for startup hooks and server behavior,
+or [testing](testing.md) for runnable checks of responses and cleanup.

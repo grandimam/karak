@@ -1,6 +1,6 @@
 ---
 title: Responses and errors
-lesson: 5
+guide: true
 description: Return a message, choose a status code, and understand the errors callers receive.
 ---
 
@@ -10,8 +10,8 @@ description: Return a message, choose a status code, and understand the errors c
 
 You can now receive typed inputs. A response is your application's answer:
 a numeric status, optional headers, and a body. The status communicates the
-outcome; the body carries the content. This chapter starts with text and errors,
-then adds metadata and cookies for the next lesson's request round trip.
+outcome; the body carries the content. Use a plain return value for text, or a `Response` object when you need
+control over the status, headers, or cookies.
 
 ## Return a message
 
@@ -139,12 +139,16 @@ the resulting string in a `Response` with `content-type: application/json`.
 
 For the routing-related cases, see [current limitations](routing.md#prototype-limitations).
 
-## Distinguish three outcomes
+## Compare validation and application errors
 
-Using this lesson's complete `main.py`, request `/users/42`, `/users/7`, and
-`/users/alex`. Predict the 200, 404, and 422 outcomes before checking with
-`curl -i`. Explain which failure is an invalid integer and which is a valid
-integer that your application cannot find.
+For the complete user example above:
 
-Add a response header and inspect it with curl. Next, receive the request
-object and read the headers and cookies the caller sends back.
+| Request | Outcome | Where it is decided |
+| --- | --- | --- |
+| `/users/42` | HTTP 200, `User 42` | The handler finds the user |
+| `/users/7` | HTTP 404, `User not found` | The handler rejects an unknown ID |
+| `/users/alex` | HTTP 422 | Karak rejects the invalid integer before calling the handler |
+
+Use `curl -i` to inspect the status, headers, and body together. Continue with
+[request context](request-context.md) to read the headers and cookies sent by
+the caller.

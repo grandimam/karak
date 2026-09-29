@@ -1,6 +1,6 @@
 ---
 title: Follow a request
-lesson: 3
+guide: true
 description: Trace an HTTP request through the server, router, handler, and response, then understand why Karak handlers use async def.
 ---
 
@@ -9,7 +9,7 @@ description: Trace an HTTP request through the server, router, handler, and resp
 <p class="lead">The client asks, the server receives, and your handler decides the response.</p>
 
 You have already run [Hello World](index.md) and added [endpoints](endpoints.md).
-Keep that `main.py` open. This lesson explains what the code and server are doing
+Keep that `main.py` open. This guide explains what the code and server are doing
 before we add input validation.
 
 ## Trace GET /health
@@ -25,7 +25,7 @@ When you run `curl -i http://127.0.0.1:8000/health`:
 
 HTTP is the request/response protocol used here. ASGI is the Python interface
 between Uvicorn and Karak. You do not need to implement ASGI to write handlers.
-Later, the testing lesson will use that interface to call the application directly.
+The [testing guide](testing.md) uses that interface to call the application directly.
 
 ## Separate setup from request handling
 
@@ -48,19 +48,20 @@ Karak awaits it so its body can run. You can return a value immediately, as the
 health endpoint does. An async function does not have to contain `await`.
 
 When your code awaits an operation that is not finished, the event loop can run
-other tasks while that operation waits. For example, a later lesson will read
+other tasks while that operation waits. For example, you can read
 request bytes with `await request.body()`.
 
 `async def` does not make blocking work nonblocking. A slow synchronous library
 call or a long CPU loop still occupies the event-loop thread. Use libraries with
 async interfaces for asynchronous I/O, and treat CPU-heavy work as a separate
-design decision. This curriculum's first endpoints perform only small operations.
+design decision. The endpoints in these examples perform only small operations.
 
-## Explain a request without looking at the code
+## Recognize where a failure happens
 
-Call `/health` twice. Explain which setup steps ran once and which handler steps
-ran twice. Then stop Uvicorn and try the same curl command: a connection failure
-means there was no server to answer, so it is different from an HTTP error response.
+A connection failure means the client could not reach a server. An HTTP error
+response means a server answered: for example, Karak returns 405 when a path
+matches but the method does not. If a handler raises an unexpected exception,
+Karak logs it and returns 500.
 
-Restart the server before continuing. Next, give the handler values from the URL
-and let Karak convert those strings into Python types.
+See [responses and errors](responses.md) for the caller-facing behavior. To pass
+values into a handler, continue with [path and query parameters](parameters.md).

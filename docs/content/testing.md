@@ -1,6 +1,6 @@
 ---
 title: Test your backend
-lesson: 10
+guide: true
 description: Write repeatable tests for a service, HTTP responses, invalid input, and application resource cleanup.
 ---
 
@@ -12,13 +12,13 @@ Until now, you have used a browser or curl to check your work. Those checks are
 useful, but easy to forget after changing a handler. Automated tests let you
 repeat the same checks without manually starting a server for each one.
 
-We will use Python's built-in `unittest` module. This lesson assumes you have
-completed [shared resources](resources.md) and [application lifecycle](application.md).
+We will use Python's built-in `unittest` module. The example builds on
+[shared resources](resources.md) and [application lifecycle](application.md).
 
 ## Use a small catalog application
 
 Replace the root `main.py` with this complete example. Keep the multi-module
-version from lesson 7 separately if you want to return to it later.
+version from [routers and modules](routing.md) separately if you want to return to it later.
 
 ```python
 from collections.abc import AsyncIterator
@@ -86,7 +86,7 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(catalog.name_for(99), "")
 ```
 
-Run only your lesson tests from the repository root:
+Run your application tests from the repository root:
 
 ```sh
 uv run python -m unittest test_main -v
@@ -102,7 +102,7 @@ An **integration test** checks collaborating parts. Here, that means routing,
 input conversion, resource injection, handler code, and response generation.
 We can call the ASGI application directly without opening a network socket.
 
-Create `lesson_helpers.py` with the following helpers. They play the small part
+Create `asgi_helpers.py` with the following helpers. They play the small part
 of the server needed by these tests:
 
 ```python
@@ -174,8 +174,8 @@ Add these imports at the top of `test_main.py`:
 
 ```python
 from main import app
-from lesson_helpers import get
-from lesson_helpers import running
+from asgi_helpers import get
+from asgi_helpers import running
 ```
 
 Then add this test class below `CatalogTests`:
@@ -230,14 +230,21 @@ This test drives the generator factory directly and checks its cleanup after
 leaving the context. It tests factory behavior; the earlier HTTP test exercises
 the framework's startup and shutdown messages. All four tests should now pass.
 
-## Make a failure useful
+## Extend the checks as your application grows
 
-Temporarily change the expected name to `"Coffee"`. Read the test failure and
-locate the assertion, then restore `"Tea"`. Add another product and a test for
-it. You should know which behavior the new test protects before writing it.
+The single-file example keeps `test_main.py` beside `main.py` for convenience.
+For a multi-feature application, start with `tests/test_users.py` and
+`tests/test_orders.py`, plus an empty `tests/__init__.py`. When a feature needs
+several test files, grow just that feature into a test package. See
+[project layout](project-layout.md#grow-tests-at-the-same-pace) for the directory
+structure and discovery command. Shared ASGI helpers can move into
+`tests/helpers.py`; update imports to use `tests.helpers`.
 
-Return to the [course project](curriculum.md#put-the-chapters-together): combine
-modules, request context, and shared resources. Keep a small set of tests for
-its important behavior as you extend it. When you next add a database or login,
-the same habit applies: identify the observable contract, then test success and
-meaningful failure cases.
+Keep service tests focused on business behavior and HTTP tests focused on the
+public response. When adding an endpoint, cover its successful result and the
+meaningful failures callers can encounter. For cookies, test the outgoing
+`Set-Cookie` header and a subsequent request carrying `Cookie`.
+
+Use [routers](routing.md) to organize a larger application; the same ASGI test
+helpers can call its composed app. Tests that use resources must keep lifespan
+running so handlers receive initialized instances.

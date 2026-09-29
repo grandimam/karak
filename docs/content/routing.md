@@ -1,7 +1,7 @@
 ---
 title: Routers and modules
-lesson: 7
-description: Give your application endpoints and read values from their URLs.
+guide: true
+description: Give each feature file a router, combine them in the application, and preserve imports as features grow into packages.
 ---
 
 # Organize endpoints into modules.
@@ -15,19 +15,23 @@ combines them and constructs the application.
 
 ## Move from one file to a package
 
+Start with one file per feature, following the [project layout](project-layout.md).
 Create this structure beside your earlier `main.py`:
 
 ```text
 app/
 ├── __init__.py
 ├── main.py
+├── resources.py
 ├── users.py
 └── orders.py
 ```
 
 Leave `__init__.py` empty. It marks `app` as a Python package. The new entry
 point is `app/main.py`; the earlier root `main.py` is not used by the command
-below. Put the following code in the named files.
+below. Put the following code in the named files. `resources.py` is where shared
+resource factories will go; it can stay empty or be added when you introduce
+your first [resource](resources.md).
 
 ## Organize routes across modules
 
@@ -147,12 +151,13 @@ Keep these limitations in mind when trying routes:
 - Literal characters such as `.` and `+` match exactly; `{name}` introduces a
   path parameter.
 
-## Add a feature without changing another module
+## Grow a feature without changing its URLs
 
-Create `app/health.py` with its own router and a GET `/health` endpoint. Include
-it in `app/main.py` and verify that all three modules still respond. Try adding
-a duplicate method/path pair, read the construction error, then remove it.
+Keep users and orders as individual files while they are easy to work with.
+When users needs separate route and service files, replace `users.py` with a
+`users/` package and export its router from `users/__init__.py`. The existing
+`from app.users import router` import in `main.py` still works.
 
-Each child router must be populated before `include()`, and the root router
-must be composed before `Karak(...)`. Next, give related handlers a shared
-service with an explicit lifetime.
+The [project layout guide](project-layout.md#expand-one-feature-when-it-needs-more-room)
+shows the transition for both application code and tests. Each feature can grow
+independently; orders does not need a package just because users has one.

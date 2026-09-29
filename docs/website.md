@@ -30,23 +30,28 @@ source files; GitHub Actions builds and uploads the output.
 
 ## Editorial direction
 
-The website is a sequential curriculum for modern Python backend development.
-The [curriculum map](content/curriculum.md) defines the chapter order; the
-[first-week schedule](content/first-week.md) groups it into optional daily sessions.
-Keep detailed future
-plans in the [mission page](content/design.md), and distinguish those plans from
-features that work today. Guides should provide working examples, commands,
-expected results, and useful explanations of errors and limits.
+The website is product documentation for someone discovering Karak. Its teaching
+order should be deliberate: Hello World, endpoints, inputs, responses, request
+context, then application structure and resources. Readers should discover
+capabilities through working examples without needing to follow a formal course.
 
-Keep Hello World on the homepage. Number lessons in prerequisite order and group
-them into coherent parts. Each lesson should explain the concepts needed by its
-example, state whether snippets replace or extend earlier code, and end with
-practice that produces an observable result. The `lesson` front-matter field
-enables previous/next navigation in the shared template. Keep numbered lessons
-contiguous in the MkDocs navigation and place references afterward.
+Keep Hello World on the homepage and group navigation by familiar product areas.
+Use plain feature names rather than lesson numbers, schedules, exercises, or
+course projects. Explain unfamiliar terms when they become relevant. Each page
+should answer what a feature does, when it helps, and how to use it, with code,
+commands, expected results, and useful failure explanations.
 
-Explain unfamiliar terms when they first appear, and introduce one new concept
-at a time. Preserve existing page URLs when reorganizing lessons. The separate
+Make guides readable individually while linking naturally to related features.
+Use the [project layout](content/project-layout.md) convention in examples:
+one feature file and one test file at first, expanding individual features into
+packages as responsibilities grow. Do not introduce empty architectural layers.
+State whether snippets replace or extend an earlier file. The `guide: true`
+front-matter field enables adjacent-guide navigation in the shared template.
+Keep guide pages together and references afterward. Preserve existing page URLs
+when reorganizing content where possible.
+
+Keep planned capabilities in the [mission page](content/design.md), clearly
+separated from features available today. The separate
 [architecture proposal](design.md) remains a contributor reference outside the
 published website.
 

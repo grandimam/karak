@@ -1,6 +1,6 @@
 ---
 title: Endpoints and HTTP methods
-lesson: 2
+guide: true
 description: Add a second endpoint, distinguish a URL from a handler, and try GET and POST requests.
 ---
 
@@ -10,7 +10,7 @@ description: Add a second endpoint, distinguish a URL from a handler, and try GE
 
 In [Hello World](index.md), visiting `/` returned a greeting. Now make the same
 application answer more than one kind of request. Keep everything in `main.py`
-for this lesson; splitting files comes later.
+for now; [router composition](routing.md) supports splitting them into modules.
 
 ## Name the pieces
 
@@ -73,10 +73,10 @@ curl -i -X POST http://127.0.0.1:8000/greetings
 The second returns HTTP 200 with `Greeting received`.
 
 This POST endpoint only acknowledges the request. It does not store anything,
-read a body, or automatically choose a creation status. Later lessons add
-inputs and explicit response status codes.
+read a body, or automatically choose a creation status. Use [parameters](parameters.md) to accept inputs and
+[responses](responses.md) to choose explicit status codes.
 
-## Predict a method mismatch
+## Handle a method mismatch
 
 Opening a URL in a browser's address bar normally makes a GET request. Try:
 
@@ -92,11 +92,11 @@ Karak currently provides GET and POST decorators. Unknown paths currently
 return HTTP 500 with `Route Not Found`; this is a framework limitation, not the
 HTTP status an application should normally use for a missing resource.
 
-## Add one endpoint yourself
+## Add more endpoints
 
-Before `app = Karak(...)`, add GET `/version` and return `"0.1.0"`. Call it with
-curl, then try POST on the same path. Predict both responses before running the
-commands. Rename the handler without changing its decorator and check that the
-URL still works.
+Register additional handlers before `app = Karak(...)`. The method and path in
+the decorator determine which requests reach each handler; the Python function
+name is independent of the URL.
 
-You now have multiple endpoints. Next, trace how a request reaches one of them.
+Continue with [how requests work](introduction.md) for the client-to-handler
+flow, or [path and query parameters](parameters.md) to accept caller input.
