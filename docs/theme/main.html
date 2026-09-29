@@ -63,9 +63,16 @@
       {% block content %}
       {% if page %}
       <div class="breadcrumb">{% if page.parent %}{{ page.parent.title | e }} <span aria-hidden="true">/</span> {% endif %}{{ page.title | e }}</div>
+      {% if page.meta.lesson %}<p class="page-status">Lesson {{ page.meta.lesson }} · <a href="{{ 'curriculum/' | url }}">Curriculum map</a></p>{% endif %}
       {{ page.content }}
+      {% if page.meta.lesson %}
+      <nav class="lesson-navigation" aria-label="Lesson navigation">
+        {% if page.previous_page and page.previous_page.meta.lesson %}<a href="{{ page.previous_page.url | url }}">← Previous: {{ page.previous_page.title | e }}</a>{% endif %}
+        {% if page.next_page and page.next_page.meta.lesson %}<a href="{{ page.next_page.url | url }}">Next: {{ page.next_page.title | e }} →</a>{% else %}<a href="{{ 'curriculum/#put-the-chapters-together' | url }}">Build the course project →</a>{% endif %}
+      </nav>
+      {% endif %}
       {% if not page.is_homepage %}
-      <footer class="page-footer"><a href="{{ config.repo_url }}/blob/main/docs/content/{{ page.file.src_uri }}">View source <span aria-hidden="true">↗</span></a><a href="{{ '.' | url }}">Quickstart <span aria-hidden="true">→</span></a></footer>
+      <footer class="page-footer"><a href="{{ config.repo_url }}/blob/main/docs/content/{{ page.file.src_uri }}">View source <span aria-hidden="true">↗</span></a><a href="{{ 'curriculum/' | url }}">Curriculum <span aria-hidden="true">→</span></a></footer>
       {% endif %}
       {% endif %}
       {% endblock %}

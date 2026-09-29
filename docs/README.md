@@ -1,30 +1,30 @@
 # Karak documentation
 
-Build an HTTP application with async routes, typed inputs, responses, and shared
-application resources. Start with a working example, then add the capabilities
-your application needs. Karak is experimental and requires Python 3.13+.
+A curriculum for learning modern Python backend development through Karak.
+Start with a working endpoint, then build toward a modular, tested application.
+Karak is experimental and requires Python 3.13+.
 
-## Get started
+## Learn in order
 
-| I want to… | Read |
+Start with the [curriculum map](content/curriculum.md), use
+[installation](content/installation.md) for setup, and optionally follow the
+[first-week schedule](content/first-week.md).
+
+| Part | Chapters |
 | --- | --- |
-| Follow a week of beginner exercises | [Your first week](content/first-week.md) |
-| Understand routers, handlers, and resources | [How Karak works](content/introduction.md) |
-| See my first endpoint respond | [Quickstart](content/index.md) |
-| Set up my environment | [Installation](content/installation.md) |
-| Start, edit, and stop my app | [Run an application](content/application.md) |
-| Add an endpoint | [Define routes](content/routing.md) |
-| Accept filters, page numbers, and other input | [Read request values](content/parameters.md) |
-| Read headers, cookies, bodies, and request state | [Request context](content/request-context.md) |
-| Return a message or a status code | [Send responses](content/responses.md) |
-| Share a service or client across requests | [Application resources](content/resources.md) |
-| Compare measured HTTP performance | [Benchmarks](content/benchmarks.md) |
+| Your first HTTP app | [1. Hello World](content/index.md) · [2. Endpoints and methods](content/endpoints.md) · [3. Follow a request](content/introduction.md) |
+| Requests and responses | [4. Parameters](content/parameters.md) · [5. Responses and errors](content/responses.md) · [6. Request context](content/request-context.md) |
+| Structure and reliability | [7. Routers and modules](content/routing.md) · [8. Shared resources](content/resources.md) · [9. Lifecycle](content/application.md) · [10. Testing](content/testing.md) |
 
-## Mission
+Each chapter has a concrete example, practice, and a next lesson. The curriculum
+ends with a small catalog project that combines the concepts. Planned subjects
+are identified separately so readers know what is available today.
 
-[Mission](content/design.md) is the site's one page about Karak's goals and
-future direction. All other website pages explain how to build with the
-features available today.
+## Reference and direction
+
+[Benchmarks](content/benchmarks.md) explains the local FastAPI comparison.
+[Mission](content/design.md) describes Karak's broader production-backend goals.
+These pages are outside the numbered learning path.
 
 ## Work on Karak
 
@@ -35,7 +35,7 @@ Design proposals may contain APIs that do not exist yet.
 | --- | --- |
 | [ASGI implementation guide](asgi.md) | Current API details and boundaries |
 | [Request handling](server.md) | How the implementation handles requests |
-| [Load testing](load-testing.md) | Measuring the ASGI demo |
+| [Load testing](load-testing.md) | Reproducing the local HTTP comparison |
 | [Architecture and design principles](design.md) | Shared models, capability boundaries, and criteria for the integrated backend |
 | [Routing notes](../notes/route.md) | Early route and validation ideas |
 | [Server notes](../notes/server.md) | Server and router exploration |

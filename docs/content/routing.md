@@ -1,84 +1,33 @@
 ---
-title: Define routes
+title: Routers and modules
+lesson: 7
 description: Give your application endpoints and read values from their URLs.
 ---
 
-# Give your application another endpoint.
+# Organize endpoints into modules.
 
-<p class="lead">Choose the URL someone visits and the function that answers it.</p>
+<p class="lead">Give each feature a router and combine them into one application.</p>
 
-A route connects a URL to your code. In the [quickstart](index.md), `/` returned
-a greeting. Define endpoints on your `router` before constructing the application
-with `Karak(router=router)`:
+You have already written endpoints, accepted inputs, and read request context.
+When those endpoints no longer fit comfortably in one file, group related
+operations into Python modules. Each module owns its router; the entry point
+combines them and constructs the application.
 
-```python
-@router.get("/users/{user_id}")
-async def user(user_id: int):
-    return f"User {user_id}"
-```
+## Move from one file to a package
 
-Start the server and visit
-[localhost:8000/users/42](http://127.0.0.1:8000/users/42). The response is:
+Create this structure beside your earlier `main.py`:
 
 ```text
-User 42
+app/
+├── __init__.py
+├── main.py
+├── users.py
+└── orders.py
 ```
 
-## Accept a value in the URL
-
-`{user_id}` marks the part of the URL that can change. Name the function
-parameter `user_id` too, and use `int` to ask for an integer.
-
-Visit `/users/7` to receive `User 7`. Visit `/users/alex` and Karak returns an
-HTTP 422 validation response because `alex` cannot be converted to an integer.
-
-## Add optional controls
-
-Use query parameters for values such as filters or page numbers. Add this
-parameter to the same user endpoint:
-
-```python
-@router.get("/users/{user_id}")
-async def user(user_id: int, active: bool = True):
-    return f"User {user_id} · active={active}"
-```
-
-Replace the earlier `user` endpoint with this version rather than registering
-both. `/users/42?active=false` responds with `User 42 · active=False`. If you
-leave `active` out, the default `True` applies.
-
-Continue to [read request values](parameters.md) for lists, defaults, and
-other supported types.
-
-## Choose an HTTP method
-
-Use `@router.get(path)` for GET endpoints and `@router.post(path)` for POST
-endpoints. The decorator selects the HTTP method; there is no `methods=`
-argument. Other method decorators and automatic JSON request-body handling are
-not supported.
-
-```python
-@router.post("/users")
-async def create_user(name: str):
-    return f"Created {name}"
-```
-
-## Construct the application
-
-After defining your endpoints, pass the router into the application:
-
-```python
-app = Karak(router=router)
-```
-
-Each decorator records an endpoint's full path, HTTP method, and handler.
-`Karak` uses those definitions to create executable routes and validate handler
-signatures during initialization. The application then matches those routes
-directly when serving requests.
-
-Finish decorating your router before constructing the app. Routers remain
-editable, but later additions are only included when a new application is
-constructed. There is no separate startup compilation or freezing step.
+Leave `__init__.py` empty. It marks `app` as a Python package. The new entry
+point is `app/main.py`; the earlier root `main.py` is not used by the command
+below. Put the following code in the named files.
 
 ## Organize routes across modules
 
@@ -121,6 +70,16 @@ router.include(orders_router)
 
 app = Karak(router=router)
 ```
+
+Start this version from the repository root:
+
+```sh
+uv run uvicorn app.main:app --reload
+```
+
+Visit `/users/42` and `/orders/7`. Their responses should be `User 42` and
+`Order 7`. `app.main:app` means the `app` object inside the `app.main` module.
+Stop the earlier server first if it is still using port 8000.
 
 `include()` copies the child router's current definitions into the parent in
 registration order. Finish defining a child before including it: later changes
@@ -187,3 +146,13 @@ Keep these limitations in mind when trying routes:
   endpoint before returning HTTP 405.
 - Literal characters such as `.` and `+` match exactly; `{name}` introduces a
   path parameter.
+
+## Add a feature without changing another module
+
+Create `app/health.py` with its own router and a GET `/health` endpoint. Include
+it in `app/main.py` and verify that all three modules still respond. Try adding
+a duplicate method/path pair, read the construction error, then remove it.
+
+Each child router must be populated before `include()`, and the root router
+must be composed before `Karak(...)`. Next, give related handlers a shared
+service with an explicit lifetime.

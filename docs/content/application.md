@@ -1,14 +1,20 @@
 ---
-title: Run an application
+title: Application lifecycle
+lesson: 9
 description: Start your Karak application, edit it locally, and understand the current deployment limits.
 ---
 
-# Run your application.
+# Own startup and shutdown.
 
-<p class="lead">Start a server, make changes, and try your endpoints.</p>
+<p class="lead">Know when shared objects are created, used, and released.</p>
 
-A Karak application collects the endpoints you want to make available. Create
-one in `main.py` and add your first endpoint:
+The [previous lesson](resources.md) introduced resources that live across
+requests. This chapter follows their application lifetime and adds a startup
+hook. You already know how to run a server; the commands here also serve as a
+reference when editing or changing ports.
+
+For this lesson, replace `main.py` with a small application so startup and
+shutdown messages are easy to observe:
 
 ```python
 from karak import Karak
@@ -126,3 +132,13 @@ For local development, run the Uvicorn command above. Do not use `--reload`
 when evaluating behavior across a long-running process: each reload creates a
 new application lifespan and new resource instances. Configure and manage the
 ASGI server yourself; Karak does not include a deployment command.
+
+## Observe a complete lifetime
+
+Run the example with the `lifespan` function. Confirm that `Application starting`
+appears before you make a request. Make two requests, then stop the server and
+look for `Application stopping`. Startup is per application lifetime, not per
+request. With `--reload`, editing the file starts another lifetime.
+
+Explain where you would initialize a shared pool and why a user's request data
+must not live there. Next, turn manual checks into automated tests.

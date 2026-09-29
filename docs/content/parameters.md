@@ -1,5 +1,6 @@
 ---
-title: Read request values
+title: Path and query parameters
+lesson: 4
 description: Accept filters, page numbers, and repeated values, with useful defaults and input validation.
 ---
 
@@ -7,13 +8,12 @@ description: Accept filters, page numbers, and repeated values, with useful defa
 
 <p class="lead">Use Python types and defaults to describe a request.</p>
 
-This page covers path and query values. To read headers, cookies, or body bytes,
-add a `ResourceContext[Request]` parameter as shown in
-[request context](request-context.md). Context parameters are supplied by Karak
-and are not converted from URL values.
+In the previous lesson, a fixed path selected a handler. Now let part of the
+URL vary. A path placeholder such as `{user_id}` names a value inside the path;
+the query string after `?` supplies optional controls such as pagination.
 
 Suppose you want a user endpoint with a page number and an active-user filter.
-Add it to your router before constructing the application:
+Add this handler to the `main.py` from lesson 2, before `app = Karak(...)`:
 
 ```python
 @router.get("/users/{user_id}")
@@ -29,6 +29,9 @@ User 42 · page=2 · active=False
 
 Karak gives your function an integer for `user_id`, an integer for `page`, and
 a boolean for `active`. You can use those values directly in your Python code.
+The `: int` and `: bool` parts are type annotations. Python annotations do not
+normally convert strings by themselves; Karak reads them to choose converters
+for incoming path and query values.
 
 ## Decide where a value comes from
 
@@ -108,3 +111,13 @@ identifies the parameter that needs attention, and your function is not called.
 Use supported types for every parameter. Types such as `str | None`, nested
 lists, dictionaries, and body models are not supported in the main framework
 yet. An unsupported annotation prevents the application from being constructed.
+
+## Predict the handler's inputs
+
+Try `/users/42`, `/users/42?page=2&active=false`, and `/users/alex` with curl.
+Before each request, predict either the Python values the handler receives or
+the validation failure. Add a required `limit: int` parameter to a separate
+endpoint and compare an omitted limit with `limit=0`.
+
+Next, choose the status and body your caller receives. Headers, cookies, and
+body bytes are introduced in the later [request context lesson](request-context.md).

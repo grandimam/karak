@@ -1,89 +1,66 @@
 ---
-title: How Karak works
-description: Understand routers, handlers, application resources, and the server that runs your code.
+title: Follow a request
+lesson: 3
+description: Trace an HTTP request through the server, router, handler, and response, then understand why Karak handlers use async def.
 ---
 
-# The pieces of a Karak application.
+# Follow a request from the client to Python.
 
-<p class="lead">Connect a URL to a Python function, then let an ASGI server run your application.</p>
+<p class="lead">The client asks, the server receives, and your handler decides the response.</p>
 
-If you have not run an endpoint yet, start with the [quickstart](index.md).
-You need Python 3.13 or newer. The repository's development environment includes
-Uvicorn, the server used throughout these guides.
+You have already run [Hello World](index.md) and added [endpoints](endpoints.md).
+Keep that `main.py` open. This lesson explains what the code and server are doing
+before we add input validation.
 
-## Define handlers on a router
+## Trace GET /health
 
-A handler is an async function that processes a request and returns a response.
-Decorators register its URL and HTTP method:
+When you run `curl -i http://127.0.0.1:8000/health`:
 
-```python
-from karak import Karak
-from karak import Router
+1. **curl is the client.** It sends an HTTP request with method GET and path `/health`.
+2. **Uvicorn is the server.** It listens on port 8000 and delivers the request to Karak.
+3. **Karak matches a route.** It finds the function registered for GET `/health`.
+4. **Your handler runs.** `health()` returns the string `"ok"`.
+5. **Karak creates the response.** It encodes that string as bytes with status 200.
+6. **Uvicorn sends it back.** curl prints the status, headers, and body.
 
-router = Router()
+HTTP is the request/response protocol used here. ASGI is the Python interface
+between Uvicorn and Karak. You do not need to implement ASGI to write handlers.
+Later, the testing lesson will use that interface to call the application directly.
 
+## Separate setup from request handling
 
-@router.get("/users/{user_id}")
-async def user(user_id: int, active: bool = True):
-    return f"User {user_id} · active={active}"
+Python imports `main.py` when the server starts. Importing creates the router,
+registers the decorated functions, and constructs `app`. It does not call each
+handler once to prepare a response.
 
+When a matching request arrives, Karak calls the handler for that request.
+Two requests can therefore execute the same function with different inputs.
+A module-level object can be shared between requests; a local variable inside
+a handler belongs to that invocation.
 
-app = Karak(router=router)
-```
+This distinction will matter when we introduce request state and application
+resources. For now, avoid storing a caller's data in a shared module variable.
 
-`Router` collects declarations. `Karak` reads those declarations and validates
-handler signatures when you construct the application. Finish declaring routes
-before calling `Karak(...)`. See [define routes](routing.md).
+## Understand async def and await
 
-## Follow a request
+Karak handlers use `async def`. Calling an async function creates a coroutine;
+Karak awaits it so its body can run. You can return a value immediately, as the
+health endpoint does. An async function does not have to contain `await`.
 
-When a client requests `/users/42?active=false`:
+When your code awaits an operation that is not finished, the event loop can run
+other tasks while that operation waits. For example, a later lesson will read
+request bytes with `await request.body()`.
 
-1. The server delivers the HTTP request to Karak.
-2. Karak matches the URL and method to `user`.
-3. The handler's annotations convert `42` into an integer and `false` into a boolean.
-4. Karak awaits `user(user_id=42, active=False)`.
-5. The returned string becomes the response body: `User 42 · active=False`.
+`async def` does not make blocking work nonblocking. A slow synchronous library
+call or a long CPU loop still occupies the event-loop thread. Use libraries with
+async interfaces for asynchronous I/O, and treat CPU-heavy work as a separate
+design decision. This curriculum's first endpoints perform only small operations.
 
-Invalid or missing required values produce HTTP 422 before the handler runs.
-Read [request values](parameters.md) for supported types and
-[responses](responses.md) for status codes and errors.
+## Explain a request without looking at the code
 
-## Share application services
+Call `/health` twice. Explain which setup steps ran once and which handler steps
+ran twice. Then stop Uvicorn and try the same curl command: a connection failure
+means there was no server to answer, so it is different from an HTTP error response.
 
-Use `@resource` to declare a factory and register the handle with
-`Karak(router=router, resources=[...])`. Karak initializes resources at startup
-and makes them available to handlers through `ResourceContext[T]` parameters
-or the handle's `.get()` method.
-
-A factory parameter such as `pool: ResourceContext[DatabasePool]` asks Karak
-to supply an already-initialized dependency. Access it through `pool.value`.
-The same convention works in handlers. `context: ResourceContext[Request]`
-provides the current request, while `pool: ResourceContext[DatabasePool]`
-provides a registered shared pool. The wrapper exposes `.value`; the requested
-type determines the lifetime. Request objects are built in and need no factory.
-Read [headers, cookies, and context](request-context.md) for a runnable example.
-
-The [resource guide](resources.md) gives a complete example and explains cleanup,
-dependency ordering, and application lifetimes.
-
-## Run the application
-
-Save the first example as `main.py`, then run:
-
-```sh
-uv run uvicorn main:app --reload
-```
-
-Uvicorn owns the listening socket and sends requests and startup/shutdown events
-to Karak. Karak owns routing, input conversion, and registered resource lifetimes.
-Your code owns business operations and their transaction boundaries.
-
-See [run an application](application.md) for editing, ports, and startup hooks.
-
-## Check the current boundaries
-
-Karak supports async GET and POST handlers, typed path and query parameters,
-text and byte responses, static files, and application resources. JSON body
-binding, automatic JSON responses, and synchronous handlers are not supported.
-Karak is experimental and is not ready for production use.
+Restart the server before continuing. Next, give the handler values from the URL
+and let Karak convert those strings into Python types.

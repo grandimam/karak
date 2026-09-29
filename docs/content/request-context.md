@@ -1,5 +1,6 @@
 ---
-title: Read headers, cookies, and request context
+title: Request context
+lesson: 6
 description: Receive the current request through ResourceContext, read headers and cookies, and keep data isolated between callers.
 ---
 
@@ -15,6 +16,11 @@ later requests.
 You already use typed parameters for URL values. Keep using those for inputs
 such as `user_id: int`. Add a context parameter when you need the rest of the
 request.
+
+`ResourceContext[Request]` is a typed wrapper. The brackets name the value you
+want Karak to supply; `.value` accesses that value. The wrapper is a Python
+object, not data sent by the client. In lesson 8 the same convention supplies
+a shared application service with a longer lifetime.
 
 ## Run a complete example
 
@@ -186,4 +192,12 @@ use the name of a path placeholder. Query parameters cannot override them.
 A missing registered provider prevents startup. An application resource cannot
 depend on `Request`, because it lives longer than one request.
 
-[Send response headers and cookies →](responses.md#send-headers){: .next-link }
+## Trace the preference round trip
+
+Start with no cookie jar, save a dark theme, read it back, and reset it. Identify
+which response carries `Set-Cookie` and which later request carries `Cookie`.
+Then send a cookie directly with `curl -b 'theme=blue'`: the server receives a
+client-supplied value even though the preference endpoint only sets light or
+dark. Explain where validation would belong if the theme controlled behavior.
+
+Next, move related endpoints into separate modules while preserving their URLs.

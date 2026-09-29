@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Set up Python and Karak, run the included example, and resolve common setup problems.
+description: Set up Python and Karak, verify your environment, and resolve common setup problems before Hello World.
 ---
 
 # Get ready to try Karak.
@@ -27,23 +27,17 @@ For now, these guides use a checkout of the repository. `uv sync` prepares its
 Python environment and installs Karak and the tools needed to run the examples.
 Use `uv run` for subsequent commands so they use that environment.
 
-## Check that it works
+## Check that Python can import Karak
 
-You can run an included example before writing any code:
+Run this from the repository root:
 
 ```sh
-uv run uvicorn examples.basic:app --reload
+uv run python -c "from karak import Karak; print('Karak is ready')"
 ```
 
-Visit [localhost:8000/users/42?active=true](http://127.0.0.1:8000/users/42?active=true).
-You should see:
-
-```text
-User 42 · active=True
-```
-
-Stop the server with **Ctrl+C**, then follow the [quickstart](index.md) to create
-your own `main.py`.
+You should see `Karak is ready`. This checks the environment without requiring
+an example file. Continue to [lesson 1: Hello World](index.md) to create your
+own `main.py` and start a server.
 
 ## If setup gets stuck
 
@@ -55,4 +49,5 @@ your own `main.py`.
 | The server cannot import `main` | Save `main.py` in the project root, and name the application `app`. |
 | Port 8000 is already in use | Stop the other server, or add `--port 8001` and open port 8001 in the browser. |
 
-For everyday editing and running, continue to [run an application](application.md).
+Start the [curriculum](curriculum.md) with [Hello World](index.md). The later
+[lifecycle lesson](application.md) covers startup, shutdown, and server settings.

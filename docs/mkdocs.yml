@@ -20,18 +20,23 @@ markdown_extensions:
   - toc:
       permalink: false
 nav:
-  - Getting started:
-      - Quickstart: index.md
-      - Your first week: first-week.md
+  - Learning path:
+      - Curriculum: curriculum.md
       - Installation: installation.md
-      - How Karak works: introduction.md
-  - Using Karak:
-      - Run an application: application.md
-      - Define routes: routing.md
-      - Read request values: parameters.md
-      - Headers, cookies, and context: request-context.md
-      - Send responses: responses.md
-      - Share application resources: resources.md
-  - About:
+      - First-week schedule: first-week.md
+  - "Part 1 · Your first HTTP app":
+      - "1. Hello World": index.md
+      - "2. Endpoints and methods": endpoints.md
+      - "3. Follow a request": introduction.md
+  - "Part 2 · Requests and responses":
+      - "4. Path and query parameters": parameters.md
+      - "5. Responses and errors": responses.md
+      - "6. Request context": request-context.md
+  - "Part 3 · Structure and reliability":
+      - "7. Routers and modules": routing.md
+      - "8. Shared resources": resources.md
+      - "9. Application lifecycle": application.md
+      - "10. Test your backend": testing.md
+  - Reference:
       - Benchmarks: benchmarks.md
       - Mission: design.md

@@ -251,9 +251,10 @@ application services are available through `ResourceContext[ServiceType]`.
 
 [Follow the complete request guide →](docs/content/request-context.md)
 
-New to backend development? [Your first week](docs/content/first-week.md) builds
-from a working endpoint to a modular, tested local application, with daily
-checkpoints and an explanation of the remaining work for production.
+New to backend development? Follow the [curriculum](docs/content/curriculum.md):
+Hello World → endpoints → requests → validation → responses → context → modules
+→ resources → lifecycle → testing. The [first-week schedule](docs/content/first-week.md)
+groups the lessons into seven practical sessions.
 
 ## Where we are
 

@@ -1,22 +1,23 @@
 ---
-title: Quickstart
+title: Hello World
+lesson: 1
 description: Install Karak, write an async endpoint, and run your first Python HTTP application.
 ---
 
 <header class="docs-opening">
   <div class="opening-copy">
-    <h1 id="start-with-a-little-python">Build your first<br>Karak application.</h1>
+    <h1 id="start-with-a-little-python">Hello, world.<br>Your first backend.</h1>
     <p class="lead">Learn to build Python backends, starting with one working endpoint.</p>
     <p class="page-status">Experimental · Python 3.13+</p>
   </div>
   <img class="opening-sphere" src="assets/share-card-sphere.png" width="1734" height="907" alt="" fetchpriority="high">
 </header>
 
-Karak's goal is to help you build production backend applications with one
-coherent Python programming model. Start here with a running HTTP endpoint,
-then follow [your first week](first-week.md) to learn routing, validation,
-request context, resources, and testing through practical exercises.
-Karak is experimental; today's examples are for local development and evaluation.
+This is lesson 1 of [Learn modern Python backend development](curriculum.md).
+Start with a program that answers one HTTP request. You will run it, change its
+response, and explain what the client sees. Later chapters add inputs, cookies,
+modules, and shared services. Karak is experimental; use this course for local
+learning and development.
 
 ## Install
 
@@ -70,12 +71,12 @@ Change the returned text, save `main.py`, and refresh the browser. The
 `--reload` option restarts the development server when you edit a file.
 Press **Ctrl+C** in the terminal when you want to stop it.
 
-## What next?
+## Make the greeting your own
 
-[Add another endpoint](routing.md), then [accept values from a request](parameters.md).
-Learn to [send responses](responses.md) and
-[share services across requests](resources.md) as your application grows.
-Use [request context](request-context.md) for headers, cookies, and body bytes.
-For a guided sequence with daily checkpoints, follow [your first week](first-week.md).
+Change the response to `"Hello from my backend"`, refresh the browser, and check
+that it changed. Stop the server and start it again without referring to the
+commands above. You should be able to identify the file, application object,
+and address you are opening.
 
-[Define routes →](routing.md){: .next-link }
+Next, add a second endpoint and make a POST request. Follow the lesson links
+below to continue in order, or return to the [curriculum map](curriculum.md).

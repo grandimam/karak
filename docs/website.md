@@ -30,16 +30,23 @@ source files; GitHub Actions builds and uploads the output.
 
 ## Editorial direction
 
-The website teaches beginners how to build Python backends, working toward
-production application skills. The [first-week path](content/first-week.md)
-provides a suggested sequence and practical checkpoints. Keep detailed future
+The website is a sequential curriculum for modern Python backend development.
+The [curriculum map](content/curriculum.md) defines the chapter order; the
+[first-week schedule](content/first-week.md) groups it into optional daily sessions.
+Keep detailed future
 plans in the [mission page](content/design.md), and distinguish those plans from
 features that work today. Guides should provide working examples, commands,
 expected results, and useful explanations of errors and limits.
 
-Lead the homepage with the quickstart. Organize navigation by tasks such as
-defining routes, accepting inputs, and sharing resources. Explain unfamiliar
-terms when they first appear, and introduce one new concept at a time. The separate
+Keep Hello World on the homepage. Number lessons in prerequisite order and group
+them into coherent parts. Each lesson should explain the concepts needed by its
+example, state whether snippets replace or extend earlier code, and end with
+practice that produces an observable result. The `lesson` front-matter field
+enables previous/next navigation in the shared template. Keep numbered lessons
+contiguous in the MkDocs navigation and place references afterward.
+
+Explain unfamiliar terms when they first appear, and introduce one new concept
+at a time. Preserve existing page URLs when reorganizing lessons. The separate
 [architecture proposal](design.md) remains a contributor reference outside the
 published website.
 

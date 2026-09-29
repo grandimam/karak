@@ -1,11 +1,17 @@
 ---
-title: Send responses
+title: Responses and errors
+lesson: 5
 description: Return a message, choose a status code, and understand the errors callers receive.
 ---
 
 # Choose what your caller receives.
 
 <p class="lead">Send back a message and a status that describes the result.</p>
+
+You can now receive typed inputs. A response is your application's answer:
+a numeric status, optional headers, and a body. The status communicates the
+outcome; the body carries the content. This chapter starts with text and errors,
+then adds metadata and cookies for the next lesson's request round trip.
 
 ## Return a message
 
@@ -132,3 +138,13 @@ the resulting string in a `Response` with `content-type: application/json`.
 | HTTP 405 | Check that the endpoint supports the requested HTTP method. |
 
 For the routing-related cases, see [current limitations](routing.md#prototype-limitations).
+
+## Distinguish three outcomes
+
+Using this lesson's complete `main.py`, request `/users/42`, `/users/7`, and
+`/users/alex`. Predict the 200, 404, and 422 outcomes before checking with
+`curl -i`. Explain which failure is an invalid integer and which is a valid
+integer that your application cannot find.
+
+Add a response header and inspect it with curl. Next, receive the request
+object and read the headers and cookies the caller sends back.

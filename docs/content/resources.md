@@ -1,5 +1,6 @@
 ---
-title: Share application resources
+title: Shared resources
+lesson: 8
 description: Register resources, declare typed dependencies with ResourceContext, and share initialized services across requests.
 ---
 
@@ -12,6 +13,16 @@ a database pool, a client, a cache, or a service. Decorate its factory with
 `@resource` and register the resulting handle with `Karak(resources=[...])`.
 
 ## Build a working example
+
+Before the code, distinguish three objects: a **service** holds application
+behavior, a **factory** constructs it, and a **resource handle** identifies a
+registered factory. `@resource` turns a factory into that handle. A handler's
+`ResourceContext[ProductService]` receives the initialized service.
+
+The example's `Catalog` is a dataclass: Python generates its initializer from
+the annotated field. `ProductService` is an ordinary class with a lookup method.
+The catalog factory uses `yield` to hand its value to Karak and `finally` to
+clean it up at shutdown; it stays open while the application uses the value.
 
 Save this as `main.py` in your repository checkout. It uses an in-memory catalog
 so you can run it without a database or additional packages:
@@ -234,4 +245,13 @@ and copy that dictionary into each HTTP scope. Karak uses ASGI lifespan state to
 select the correct application resource instances; running requests directly
 without it does not initialize resources.
 
-[Run your application →](application.md){: .next-link }
+The [testing lesson](testing.md) turns this into runnable unit and HTTP tests.
+
+## Explain who owns the catalog
+
+Run the complete example and request two product IDs. Trace both requests back
+to the same service and catalog instance. Add a print before the factory's
+`yield` and inside its `finally`, then stop and restart the server. Confirm that
+setup and cleanup follow the application lifetime, not each lookup.
+
+Next, follow those startup and shutdown events through the application lifecycle.
