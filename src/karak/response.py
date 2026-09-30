@@ -3,7 +3,7 @@ from datetime import datetime
 from email.utils import format_datetime
 from http.cookies import SimpleCookie
 
-from karak.headers import MutableHeaders
+from karak.request import MutableHeaders
 from karak.types import Scope
 from karak.types import Receive
 from karak.types import Send

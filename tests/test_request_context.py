@@ -13,7 +13,7 @@ from karak import ResourceContext
 from karak import Response
 from karak import Router
 from karak import resource
-from karak.headers import Headers
+from karak.request import Headers
 from tests.test_resources import Pool
 from tests.test_resources import request
 from tests.test_resources import running
